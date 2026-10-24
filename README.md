@@ -162,6 +162,8 @@ Fill in:
 
 > Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser or commit it. It is only used inside server actions (`app/actions/employees.ts` and `app/actions/auth.ts`).
 
+> New Supabase projects can use the publishable key (`sb_publishable_...`) as `NEXT_PUBLIC_SUPABASE_ANON_KEY` and the secret key (`sb_secret_...`) as `SUPABASE_SERVICE_ROLE_KEY`. Legacy `anon` / `service_role` JWT keys also work if they are still enabled. Do not paste secret keys into logs or chat; rotate or disable them if exposed.
+
 > `NEXT_PUBLIC_DEMO_MODE` never enables demo mode in a production build. Production requires the Supabase URL and anon key; without them the login screen shows a configuration notice.
 
 Restart the dev server after changing `.env.local`.
