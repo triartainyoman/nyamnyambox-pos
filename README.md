@@ -206,6 +206,39 @@ Existing accounts are backfilled with a username from their email prefix by `000
 
 > If `SUPABASE_SERVICE_ROLE_KEY` is missing, cashier username login returns a configuration error. Owner email login still works.
 
+### 7. Key rotation & leak checks
+
+Use the new **publishable** and **secret** API keys when available. If the project still uses legacy JWT keys, keep them private and rotate them if they are ever exposed.
+
+To rotate the server key:
+
+1. In Supabase, open **Project Settings → API Keys** and create a new secret key.
+2. Update `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and in Vercel (Production, Preview, Development).
+3. Redeploy, verify login and employee creation, then delete the old secret key.
+4. If a legacy JWT secret leaked, rotate/revoke it under **Project Settings → JWT Settings** or disable legacy API keys. Disabling them invalidates every existing legacy `anon` / `service_role` key.
+
+Check that the secret key never reaches the browser bundle or git:
+
+```bash
+SERVICE_KEY=$(grep '^SUPABASE_SERVICE_ROLE_KEY=' .env.local | cut -d= -f2-)
+
+# Must print OK
+if grep -rqF "$SERVICE_KEY" .next/static; then
+  echo "LEAK: secret key found in client bundle"
+else
+  echo "OK: secret key not in client bundle"
+fi
+
+# Must print OK
+if git grep -qF "$SERVICE_KEY" -- .; then
+  echo "LEAK: secret key found in tracked files"
+else
+  echo "OK: secret key not in tracked files"
+fi
+```
+
+`NEXT_PUBLIC_*` values are public by design. Only put the Supabase URL and publishable/anon key there; never put the secret/service role key in a `NEXT_PUBLIC_*` variable.
+
 ---
 
 ## Roles & access
@@ -217,6 +250,8 @@ Existing accounts are backfilled with a username from their email prefix by `000
 | `/dashboard` | ✅ | Redirected to `/pos` |
 | `/products` | ✅ | Redirected to `/pos` |
 | `/employees` | ✅ | Redirected to `/pos` |
+
+After login, Owner/Master Admin land on `/dashboard`; cashiers land on `/pos`.
 
 RLS enforces the same boundaries at the database level. Employees can only read orders from the current Jakarta business day, while Owners can read all orders. Deactivated profiles (`is_active = false`) fail the `is_active_staff()` check and cannot read or write data.
 

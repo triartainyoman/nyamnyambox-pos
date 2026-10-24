@@ -141,8 +141,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Login email Owner diuji lewat Auth API: sukses, lalu `profiles` dapat dibaca sesuai RLS.
 - Legacy JWT API keys (`anon`/`service_role`) dinonaktifkan; aplikasi memakai publishable key + secret key baru. Key disimpan di `.env.local` (tidak di-commit).
 
-### [ ] T07 — Konfigurasi environment lokal & production
-**Prioritas:** P0 · **Butuh user:** ya (nilai secret)
+### [x] T07 — Konfigurasi environment lokal & production
+**Prioritas:** P0 · **Butuh user:** ya (nilai secret) · **Selesai:** 2026-10-25
 
 - Isi `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 - Pastikan service role **tidak** berprefix `NEXT_PUBLIC_` dan tidak pernah masuk bundle client.
@@ -152,11 +152,16 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 
 **Selesai jika:** login nyata berjalan; tidak ada secret di bundle client (`grep` hasil build) dan tidak ada di git.
 
-**Status:** sebagian selesai.
-- `.env.local` sudah diisi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable), dan `SUPABASE_SERVICE_ROLE_KEY` (secret); `NEXT_PUBLIC_DEMO_MODE=false`.
-- Legacy JWT keys sudah dinonaktifkan di project, jadi nilai lama tidak berlaku.
-- `npm run build` dan `npm run lint` lulus dengan env nyata; secret key tidak ditemukan di `.next/static`.
-- Belum: env Vercel (Production/Preview), dokumentasi rotasi key, dan uji login end-to-end lewat aplikasi.
+**Status:** selesai.
+- `.env.local` diisi URL Supabase, publishable key, secret key, dan `NEXT_PUBLIC_DEMO_MODE=false`.
+- Vercel project `nyamnyambox-pos` terhubung ke repo; production URL `https://nyamnyambox-pos.vercel.app`.
+- Env yang sama dipasang di Vercel untuk Production, Preview, dan Development; secret key disimpan sebagai tipe Secret.
+- Deployment protection SSO dimatikan agar aplikasi dapat diakses publik; proteksi aplikasi tetap lewat login + RLS.
+- Supabase Auth `site_url` dan redirect URLs diarahkan ke domain production, preview Vercel, dan localhost.
+- Login Owner end-to-end di production berhasil dan mendarat di `/dashboard`; akun uji sementara dihapus, tersisa 1 Owner aktif.
+- Redirect setelah login sekarang berbasis role: Owner/Master Admin → `/dashboard`, kasir → `/pos` (sebelumnya selalu `/pos`).
+- `npm run build` dan `npm run lint` lulus; secret key tidak ada di `.next/static` maupun file yang di-track git.
+- Prosedur rotasi key dan cek kebocoran ditambahkan ke README.
 
 ### [ ] T08 — Uji auth & RLS nyata
 **Prioritas:** P0 · **Butuh user:** tidak (butuh project dari T06/T07)

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { homePathForRole } from "@/lib/constants";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 import { demoLogin } from "@/lib/demo/session";
 import { isAuthConfigured, isDemoMode, isSupabaseConfigured } from "@/lib/env";
@@ -40,7 +41,7 @@ export async function loginAction(
       maxAge: 60 * 60 * 24 * 7,
       sameSite: "lax",
     });
-    redirect("/pos");
+    redirect(homePathForRole(profile.role));
   }
 
   let email = identifier;
@@ -87,7 +88,7 @@ export async function loginAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: "Koneksi Supabase tidak tersedia." };
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const status = typeof error.status === "number" ? error.status : 0;
     const detail = `${error.name} ${error.message}`.toLowerCase();
@@ -105,7 +106,13 @@ export async function loginAction(
     };
   }
 
-  redirect("/pos");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+
+  redirect(homePathForRole(profile?.role));
 }
 
 export async function logoutAction(): Promise<void> {

@@ -10,6 +10,7 @@ import {
 import { LoginForm } from "@/components/auth/login-form";
 import { Brand } from "@/components/brand";
 import { getCurrentProfile } from "@/lib/auth";
+import { homePathForRole } from "@/lib/constants";
 import { DEMO_PASSWORD } from "@/lib/demo/session";
 import { isAuthConfigured, isDemoMode } from "@/lib/env";
 
@@ -25,7 +26,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const profile = await getCurrentProfile();
-  if (profile) redirect("/pos");
+  if (profile) redirect(homePathForRole(profile.role));
 
   const { next } = await searchParams;
 

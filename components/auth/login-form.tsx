@@ -17,6 +17,7 @@ import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { homePathForRole } from "@/lib/constants";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 
 export function LoginForm({
@@ -32,7 +33,7 @@ export function LoginForm({
 
   function enterDemo(role: "OWNER" | "EMPLOYEE") {
     document.cookie = `${DEMO_COOKIE}=${role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
-    router.push("/pos");
+    router.push(homePathForRole(role));
   }
 
   return (
@@ -93,7 +94,7 @@ export function LoginForm({
 
         <Button type="submit" className="w-full" size="lg" disabled={pending}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-          {pending ? "Memeriksa..." : "Masuk ke Kasir"}
+          {pending ? "Memeriksa..." : "Masuk"}
         </Button>
       </form>
 

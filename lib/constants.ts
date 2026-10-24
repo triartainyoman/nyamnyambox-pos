@@ -49,6 +49,10 @@ export function isOwnerRole(role: UserRole | undefined | null) {
   return role === "OWNER" || role === "MASTER_ADMIN";
 }
 
+export function homePathForRole(role: UserRole | undefined | null) {
+  return isOwnerRole(role) ? "/dashboard" : "/pos";
+}
+
 export function channelMeta(channel: OrderChannel) {
   return ORDER_CHANNELS.find((item) => item.value === channel) ?? ORDER_CHANNELS[0];
 }

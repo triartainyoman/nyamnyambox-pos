@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+import { homePathForRole } from "@/lib/constants";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 import {
   isDemoMode,
@@ -9,6 +10,7 @@ import {
   SUPABASE_URL,
 } from "@/lib/env";
 import type { Database } from "@/lib/supabase/types";
+import type { UserRole } from "@/lib/types";
 
 const PROTECTED_PREFIXES = ["/pos", "/history", "/dashboard", "/products", "/employees"];
 
@@ -33,7 +35,7 @@ export async function proxy(request: NextRequest) {
 
     if (demoRole && pathname === "/login") {
       const url = request.nextUrl.clone();
-      url.pathname = "/pos";
+      url.pathname = homePathForRole(demoRole as UserRole);
       url.search = "";
       return NextResponse.redirect(url);
     }
@@ -81,13 +83,6 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/login";
     url.search = "";
     if (pathname !== "/pos") url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/pos";
-    url.search = "";
     return NextResponse.redirect(url);
   }
 
