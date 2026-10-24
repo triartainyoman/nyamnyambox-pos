@@ -58,6 +58,7 @@ export function formatMonthLabel(month: string) {
   // month is `YYYY-MM`
   const [year, m] = month.split("-").map(Number);
   return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "UTC",
     month: "short",
     year: "2-digit",
   }).format(new Date(Date.UTC(year, m - 1, 1)));

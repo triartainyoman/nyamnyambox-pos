@@ -190,14 +190,22 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 
 ## Fase 2 — Kualitas & regresi
 
-### [ ] T09 — Test unit
-**Prioritas:** P1 · **Butuh user:** tidak
+### [x] T09 — Test unit
+**Prioritas:** P1 · **Butuh user:** tidak · **Selesai:** 2026-10-25
 
 - Setup Vitest (atau node test runner) + script `npm test`.
 - Test: validasi/normalisasi username, format bisnis Jakarta, perhitungan total, format Rupiah, template WhatsApp, parsing error.
 - Target awal: logika murni di `lib/` dan `stores/`.
 
 **Selesai jika:** `npm test` hijau dan berjalan di CI.
+
+**Hasil verifikasi:**
+- Vitest 5 + jsdom ditambahkan; `npm test` (`vitest run`) dan `npm run test:watch` tersedia. `vitest.config.mts` memakai alias `@`, environment `node` default, dan jsdom khusus test cart store.
+- 109 test di 7 file (`tests/unit/`): `username`, `format`, `date`, `whatsapp`, `errors`, `constants`, dan `cart-store`.
+- Cakupan: trim/lowercase + batas 3–30 karakter + separator username; Rupiah/angka/initials/telepon; rentang hari bisnis dan label tanggal `Asia/Jakarta`; total, quantity, notes, dan persistensi cart; template nota + normalisasi nomor `wa.me`; pemetaan kode Postgres/PostgREST dan whitelist pesan tanpa membocorkan detail internal; landing path per role.
+- `formatMonthLabel` sekarang memakai `timeZone: "UTC"` agar label bulan stabil di mesin/CI dengan zona waktu berbeda.
+- Workflow minimal `.github/workflows/unit-tests.yml` menjalankan `npm ci` + `npm test` pada push ke `main` dan pull request. Pipeline lengkap (typecheck/lint/build/E2E) tetap menjadi lingkup T11.
+- `npm test` ✅ (109/109), `npx tsc --noEmit` ✅, `npm run lint` ✅, `npm run build` ✅.
 
 ### [ ] T10 — E2E smoke test (Playwright)
 **Prioritas:** P1 · **Butuh user:** tidak

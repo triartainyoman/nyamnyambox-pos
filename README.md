@@ -298,10 +298,27 @@ npm run dev     # start development server
 npm run build   # production build
 npm run start   # run the production build
 npm run lint    # ESLint
+npm test        # unit tests (Vitest)
+npm run test:watch # unit tests in watch mode
 npm run test:rls # RLS/RPC regression test (PGlite)
 ```
 
-Requires **Node.js 20.9+**.
+Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
+
+### Unit tests
+
+`npm test` runs the Vitest suite in `tests/unit/`:
+
+- username normalization/validation rules;
+- Rupiah/number/initials/phone formatting;
+- `Asia/Jakarta` business-date ranges and date labels;
+- cart quantities, notes, totals, and persistence;
+- WhatsApp receipt text and `wa.me` phone normalization;
+- error mapping/whitelisting (raw Postgres details never leak);
+- role landing paths and channel/payment labels.
+
+The suite runs in CI on every push to `main` and every pull request via
+`.github/workflows/unit-tests.yml`.
 
 ### RLS/RPC regression test
 
@@ -367,6 +384,8 @@ supabase/
   seed.sql                 # menu re-seed
   verify.sql               # production schema verification queries
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
+tests/unit/                # Vitest unit tests
+vitest.config.mts          # Vitest config (alias @, node/jsdom environments)
 proxy.ts                   # Next.js 16 auth middleware
 ```
 
