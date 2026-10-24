@@ -45,16 +45,22 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Dev demo: login `rizky` / `demo123` → `/pos` ✅; logout menghapus cookie `nyb_demo_role` dan kembali ke `/login` ✅.
 - `.env.local` berisi `NEXT_PUBLIC_DEMO_MODE=true` (gitignored) agar demo lokal tetap mudah.
 
-### [ ] T02 — Hardening RLS & RPC
-**Prioritas:** P0 · **Butuh user:** tidak (SQL lokal), lalu dijalankan di Supabase pada T06
+### [x] T02 — Hardening RLS & RPC
+**Prioritas:** P0 · **Butuh user:** tidak (SQL lokal), lalu dijalankan di Supabase pada T06 · **Selesai:** 2026-10-25
 
-- Buat `supabase/migrations/0003_harden_writes.sql`.
+- Buat `supabase/migrations/0003_harden_order_writes.sql`.
 - Cabut `INSERT/UPDATE/DELETE` langsung pada `orders` dan `order_items` dari role `authenticated`; sisakan `SELECT` sesuai policy.
 - Pastikan semua penulisan order hanya lewat RPC `security definer` (`create_order`, `update_order`) yang memvalidasi harga, produk aktif, dan kepemilikan order.
 - Tambah `REVOKE`/`GRANT` eksplisit dan `set search_path = public, pg_temp` pada fungsi.
 - Uji: kasir tidak bisa `update orders set total_amount=...`; tidak bisa insert `order_items` dengan harga arbitrer; alur POS & edit tetap jalan.
 
 **Selesai jika:** percobaan DML langsung ditolak, tetapi create/edit order via aplikasi tetap sukses.
+
+**Hasil verifikasi:**
+- Migrasi `0003_harden_order_writes.sql`: `orders`/`order_items` hanya `SELECT` untuk `authenticated`; DML dicabut; policy tulis dihapus; `receipt_seq` tidak bisa dipakai client; RPC hanya untuk `authenticated`; trigger helper tidak bisa dipanggil client.
+- `search_path = public, pg_temp` dipasang pada 7 fungsi (`handle_new_user`, `protect_profile_fields`, `is_active_staff`, `is_owner`, `dashboard_summary`, `create_order`, `update_order`).
+- `npm run test:rls` (PGlite) lulus 26 check: create/update via RPC tetap jalan dan menghitung harga server-side; INSERT/UPDATE/DELETE langsung ditolak; kasir hanya melihat order hari ini; akun nonaktif ditolak; anon ditolak; owner bisa melihat semua dan mengedit order lama; grant/policy/fungsi sesuai.
+- Aplikasi tetap memakai `.rpc("create_order")` / `.rpc("update_order")`; tidak ada DML langsung ke `orders`/`order_items` di kode aplikasi.
 
 ### [ ] T03 — Proteksi akun Owner & privasi profil
 **Prioritas:** P0 · **Butuh user:** tidak

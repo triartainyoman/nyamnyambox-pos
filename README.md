@@ -114,13 +114,15 @@ Create a project at [supabase.com](https://supabase.com).
 
 ### 2. Run the schema
 
-Open **SQL Editor** and run the full migration:
+Open **SQL Editor** and run the migrations in order:
 
 ```text
 supabase/migrations/0001_init.sql
+supabase/migrations/0002_username_login.sql
+supabase/migrations/0003_harden_order_writes.sql
 ```
 
-It creates:
+`0001_init.sql` creates:
 
 - Enums: `user_role`, `order_channel`, `payment_method`, `payment_status`
 - Tables: `profiles`, `products`, `orders`, `order_items`
@@ -128,6 +130,10 @@ It creates:
 - Row Level Security policies
 - RPCs: `create_order`, `update_order`, `dashboard_summary`
 - Seed menu (only when `products` is empty)
+
+`0002_username_login.sql` adds `profiles.username`, backfills existing rows, and keeps the bootstrap trigger in sync.
+
+`0003_harden_order_writes.sql` makes `orders`/`order_items` read-only for clients and pins `search_path` on every `SECURITY DEFINER` function. Order writes then only work through the RPCs.
 
 `supabase/seed.sql` can be run separately to re-seed the menu.
 
@@ -209,12 +215,14 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 ## Database design notes
 
 - **Server-side pricing** — `create_order` and `update_order` look up product prices in the database. The client never sends the total.
+- **RPC-only order writes** — clients have `SELECT` only on `orders`/`order_items`. `INSERT`/`UPDATE`/`DELETE` are revoked, so a cashier cannot bypass pricing or validation by calling PostgREST directly. All mutations go through `create_order` / `update_order`.
 - **Atomic writes** — order + items are written in one transaction inside the RPCs.
 - **Receipt numbers** — generated as `NYB-YYYYMMDD-NNNN` per Jakarta business day.
 - **`is_edited`** — set automatically by `update_order`, displayed on receipts and history.
 - **Analytics** — `dashboard_summary` aggregates today's metrics, 6-month sales, channel revenue, and top products in one call.
 - **Profile protection** — a trigger prevents non-owners from changing their own `role`, `is_active`, or `email`.
 - **No hard deletes** — products are deactivated instead of deleted so historical receipts stay intact.
+- **Pinned `search_path`** — every `SECURITY DEFINER` function uses `public, pg_temp` to prevent schema-shadowing attacks.
 
 ---
 
@@ -234,9 +242,21 @@ npm run dev     # start development server
 npm run build   # production build
 npm run start   # run the production build
 npm run lint    # ESLint
+npm run test:rls # RLS/RPC regression test (PGlite)
 ```
 
 Requires **Node.js 20.9+**.
+
+### RLS/RPC regression test
+
+`npm run test:rls` applies the real migrations to an in-memory PGlite database and emulates Supabase's `anon` / `authenticated` roles. It verifies that:
+
+- clients cannot `INSERT`/`UPDATE`/`DELETE` `orders` or `order_items` directly;
+- `create_order` / `update_order` still work and compute prices server-side;
+- cashiers only see today's orders, inactive accounts are locked out, and anonymous access is denied;
+- only `SELECT` policies remain on order tables and every `SECURITY DEFINER` function pins `search_path`.
+
+This is a fast local check. It does not replace testing against a real Supabase project (see T08 in `PRODUCTION_TODO.md`).
 
 ---
 
@@ -248,7 +268,7 @@ Requires **Node.js 20.9+**.
 4. Deploy.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
-   `0001_init.sql`, then `0002_username_login.sql` (if the project already had the first schema).
+   `0001_init.sql`, `0002_username_login.sql`, then `0003_harden_order_writes.sql`.
 
 ---
 
@@ -281,7 +301,9 @@ stores/useCartStore.ts     # persisted cart
 supabase/
   migrations/0001_init.sql # schema, RLS, RPCs, seed
   migrations/0002_username_login.sql # username column, backfill, trigger
+  migrations/0003_harden_order_writes.sql # RPC-only order writes, pinned search_path
   seed.sql                 # menu re-seed
+scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 proxy.ts                   # Next.js 16 auth middleware
 ```
 
