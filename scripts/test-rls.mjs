@@ -108,6 +108,7 @@ async function main() {
 
   await db.exec(migration("0003_harden_order_writes.sql"));
   await db.exec(migration("0004_profile_privacy.sql"));
+  await db.exec(migration("0005_daily_receipt_numbers.sql"));
 
   // --------------------------------------------------------------------------
   // Fixtures
@@ -184,7 +185,21 @@ async function main() {
   assert.equal(created.total_amount, productPrice * 2, "total must be priced server-side");
   assert.equal(created.cashier_id, CASHIER_ID);
   assert.equal(created.is_edited, false);
+  const todayJakarta = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(new Date())
+    .replace(/-/g, "");
+  assert.equal(
+    created.receipt_number,
+    `NYB-${todayJakarta}-0001`,
+    "the first order of the business day should be 0001",
+  );
   log("cashier create_order computes the total from DB prices");
+  log("first order of the day gets receipt number 0001");
 
   const todayOrderId = created.id;
 
@@ -233,10 +248,19 @@ async function main() {
   );
 
   await expectError(
-    "cashier cannot drain the receipt sequence",
+    "cashier cannot read receipt counters",
     () =>
       runAs("authenticated", CASHIER_ID, () =>
-        db.query(`select nextval('public.receipt_seq')`),
+        db.query(`select * from public.receipt_counters`),
+      ),
+    /permission denied/i,
+  );
+
+  await expectError(
+    "cashier cannot allocate receipt numbers directly",
+    () =>
+      runAs("authenticated", CASHIER_ID, () =>
+        db.query(`select public.next_receipt_number(current_date)`),
       ),
     /permission denied/i,
   );
@@ -451,6 +475,47 @@ async function main() {
   );
 
   // --------------------------------------------------------------------------
+  // Receipt numbering: increments per day, restarts on a new day
+  // --------------------------------------------------------------------------
+  const secondOrder = await runAs(
+    "authenticated",
+    CASHIER_ID,
+    async () => {
+      const result = await db.query(
+        `select * from public.create_order(
+           'TAKEAWAY'::public.order_channel,
+           'CASH'::public.payment_method,
+           'LUNAS'::public.payment_status,
+           null,
+           $1::jsonb
+         )`,
+        [JSON.stringify([{ product_id: productId, quantity: 1 }])],
+      );
+      return result.rows[0];
+    },
+    { commit: true },
+  );
+  assert.equal(secondOrder.receipt_number, `NYB-${todayJakarta}-0002`);
+  log("second order of the day increments to 0002");
+
+  const todayCounter = await db.query(
+    `select last_number from public.receipt_counters where business_date = (now() at time zone 'Asia/Jakarta')::date`,
+  );
+  assert.equal(todayCounter.rows[0].last_number, 2);
+  log("today's counter is stored per business date");
+
+  const pastDate = "2026-10-24";
+  const pastFirst = await db.query(`select public.next_receipt_number($1::date) as n`, [
+    pastDate,
+  ]);
+  const pastSecond = await db.query(`select public.next_receipt_number($1::date) as n`, [
+    pastDate,
+  ]);
+  assert.equal(pastFirst.rows[0].n, 1);
+  assert.equal(pastSecond.rows[0].n, 2);
+  log("a different business date starts its own counter at 0001");
+
+  // --------------------------------------------------------------------------
   // Owner lockout protection
   // --------------------------------------------------------------------------
   await expectError(
@@ -518,14 +583,18 @@ async function main() {
   assert.equal(anonGrants.rows.length, 0);
   log("anon has no grants on order tables");
 
-  const sequencePrivileges = await db.query(
+  const sequenceGone = await db.query(`select to_regclass('public.receipt_seq') as name`);
+  assert.equal(sequenceGone.rows[0].name, null);
+  log("the global receipt sequence is gone");
+
+  const counterAccess = await db.query(
     `select
-       has_sequence_privilege('authenticated', 'public.receipt_seq', 'USAGE') as usage,
-       has_sequence_privilege('authenticated', 'public.receipt_seq', 'UPDATE') as upd`,
+       has_table_privilege('authenticated', 'public.receipt_counters', 'SELECT') as sel,
+       (select relrowsecurity from pg_class where oid = 'public.receipt_counters'::regclass) as rls`,
   );
-  assert.equal(sequencePrivileges.rows[0].usage, false);
-  assert.equal(sequencePrivileges.rows[0].upd, false);
-  log("authenticated cannot use/update the receipt sequence");
+  assert.equal(counterAccess.rows[0].sel, false);
+  assert.equal(counterAccess.rows[0].rls, true);
+  log("receipt counters are RLS-protected and not readable by clients");
 
   const policies = await db.query(
     `select c.relname, p.polname, p.polcmd
@@ -551,11 +620,12 @@ async function main() {
        'is_owner',
        'dashboard_summary',
        'create_order',
-       'update_order'
+       'update_order',
+       'next_receipt_number'
      )
      order by proname`,
   );
-  assert.equal(functions.rows.length, 7);
+  assert.equal(functions.rows.length, 8);
   for (const row of functions.rows) {
     assert.ok(
       (row.proconfig ?? []).includes("search_path=public, pg_temp"),

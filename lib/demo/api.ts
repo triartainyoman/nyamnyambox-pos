@@ -19,6 +19,19 @@ function newId() {
   return `demo-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+function nextReceiptNumber(orders: Order[], createdAt: Date) {
+  const prefix = `NYB-${toBusinessDate(createdAt).replace(/-/g, "")}-`;
+  let max = 0;
+
+  for (const order of orders) {
+    if (!order.receipt_number.startsWith(prefix)) continue;
+    const suffix = Number(order.receipt_number.slice(prefix.length));
+    if (Number.isFinite(suffix)) max = Math.max(max, suffix);
+  }
+
+  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+}
+
 function withProductNames(order: Order): Order {
   const db = getDemoDb();
   return {
@@ -112,9 +125,7 @@ export function demoCreateOrder(input: CreateOrderInput): Order {
 
   const id = newId();
   const createdAt = new Date();
-  const receiptDay = toBusinessDate(createdAt).replace(/-/g, "");
-  const receiptNumber = `NYB-${receiptDay}-${String(db.receiptCounter).padStart(4, "0")}`;
-  db.receiptCounter += 1;
+  const receiptNumber = nextReceiptNumber(db.orders, createdAt);
 
   const order: Order = {
     id,

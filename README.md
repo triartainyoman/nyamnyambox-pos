@@ -121,6 +121,7 @@ supabase/migrations/0001_init.sql
 supabase/migrations/0002_username_login.sql
 supabase/migrations/0003_harden_order_writes.sql
 supabase/migrations/0004_profile_privacy.sql
+supabase/migrations/0005_daily_receipt_numbers.sql
 ```
 
 `0001_init.sql` creates:
@@ -137,6 +138,8 @@ supabase/migrations/0004_profile_privacy.sql
 `0003_harden_order_writes.sql` makes `orders`/`order_items` read-only for clients and pins `search_path` on every `SECURITY DEFINER` function. Order writes then only work through the RPCs.
 
 `0004_profile_privacy.sql` limits staff to reading their own profile, adds a minimal `staff_directory` view (`id`, `name`) for order display, and prevents owners from deactivating/demoting themselves or removing the last active owner.
+
+`0005_daily_receipt_numbers.sql` replaces the global receipt sequence with a per-business-day `receipt_counters` table. Numbers restart at `0001` every Jakarta day and are allocated atomically with `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
 
 `supabase/seed.sql` can be run separately to re-seed the menu.
 
@@ -220,7 +223,7 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 - **Server-side pricing** — `create_order` and `update_order` look up product prices in the database. The client never sends the total.
 - **RPC-only order writes** — clients have `SELECT` only on `orders`/`order_items`. `INSERT`/`UPDATE`/`DELETE` are revoked, so a cashier cannot bypass pricing or validation by calling PostgREST directly. All mutations go through `create_order` / `update_order`.
 - **Atomic writes** — order + items are written in one transaction inside the RPCs.
-- **Receipt numbers** — generated as `NYB-YYYYMMDD-NNNN` per Jakarta business day.
+- **Receipt numbers** — generated as `NYB-YYYYMMDD-NNNN` from a per-day counter. Each Jakarta business day starts at `0001`; the counter row is updated atomically so parallel checkouts cannot duplicate a number.
 - **`is_edited`** — set automatically by `update_order`, displayed on receipts and history.
 - **Analytics** — `dashboard_summary` aggregates today's metrics, 6-month sales, channel revenue, and top products in one call.
 - **Profile privacy** — staff can read only their own `profiles` row; owners can read all. Order history uses the minimal `staff_directory` view (`id`, `name`) so cashier names stay visible without exposing emails.
@@ -261,6 +264,7 @@ Requires **Node.js 20.9+**.
 - cashiers only see today's orders, inactive accounts are locked out, and anonymous access is denied;
 - cashiers can read only their own profile and see cashier names through the minimal `staff_directory` view;
 - owners cannot deactivate/demote themselves, and the last active owner cannot be removed;
+- receipt numbers increment per business day and a different day starts again at `0001`;
 - only `SELECT` policies remain on order tables and every `SECURITY DEFINER` function pins `search_path`.
 
 This is a fast local check. It does not replace testing against a real Supabase project (see T08 in `PRODUCTION_TODO.md`).
@@ -275,7 +279,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 4. Deploy.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
-   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, then `0004_profile_privacy.sql`.
+   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, then `0005_daily_receipt_numbers.sql`.
 
 ---
 
@@ -310,6 +314,7 @@ supabase/
   migrations/0002_username_login.sql # username column, backfill, trigger
   migrations/0003_harden_order_writes.sql # RPC-only order writes, pinned search_path
   migrations/0004_profile_privacy.sql # self/owner profile reads, owner lockout guard
+  migrations/0005_daily_receipt_numbers.sql # per-day receipt counters
   seed.sql                 # menu re-seed
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 proxy.ts                   # Next.js 16 auth middleware

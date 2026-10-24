@@ -79,8 +79,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - `npm run test:rls` (PGlite) lulus 34 check, termasuk: kasir hanya melihat profil sendiri, tidak bisa membaca email owner, bisa membaca `staff_directory`, tidak bisa menaikkan role sendiri; owner melihat semua profil, tidak bisa mengunci diri sendiri, tidak bisa menghapus owner terakhir, tetapi bisa menurunkan owner lain selama masih ada owner aktif.
 - `npx tsc --noEmit`, `npm run lint`, `npm run build` ✅.
 
-### [ ] T04 — Nomor nota berurutan per hari
-**Prioritas:** P1 · **Butuh user:** tidak
+### [x] T04 — Nomor nota berurutan per hari
+**Prioritas:** P1 · **Butuh user:** tidak · **Selesai:** 2026-10-25
 
 - Ganti `receipt_seq` global dengan counter per tanggal bisnis Jakarta (tabel `receipt_counters` atau sequence harian yang di-reset aman).
 - Tangani race condition dengan `INSERT ... ON CONFLICT ... DO UPDATE ... RETURNING` di dalam transaksi.
@@ -88,6 +88,15 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Uji dua order paralel dan pergantian hari.
 
 **Selesai jika:** format `NYB-YYYYMMDD-0001` selalu mulai dari 0001 setiap hari dan tidak ada duplikat saat paralel.
+
+**Hasil verifikasi:**
+- Migrasi `0005_daily_receipt_numbers.sql`: tabel `receipt_counters(business_date primary key, last_number)` + fungsi privat `next_receipt_number(date)` yang memakai `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
+- `create_order` memakai tanggal bisnis Jakarta yang sama untuk prefix nota dan counter; `receipt_seq` global dihapus.
+- `receipt_counters` RLS aktif tanpa policy dan tanpa grant ke `anon`/`authenticated`; `next_receipt_number` hanya bisa dipanggil dari fungsi `SECURITY DEFINER`.
+- `npm run test:rls` (PGlite) lulus 42 check: order pertama hari ini `0001`, order kedua `0002`, counter tersimpan per tanggal, dan tanggal bisnis lain mulai lagi dari `0001`; client tidak bisa membaca counter atau mengalokasikan nomor langsung.
+- Catatan: PGlite berjalan single-connection sehingga paritas paralel tidak bisa diuji dengan dua koneksi. Keamanan paralel berasal dari row lock pada `ON CONFLICT DO UPDATE`; uji beban nyata tetap dilakukan di Supabase pada T08.
+- Demo mode disamakan: seed dan order baru menghitung nomor per tanggal bisnis; diuji membuat order baru setelah 9 order hari ini menghasilkan `NYB-20261025-0010`.
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` ✅.
 
 ### [ ] T05 — Error boundary & error handling
 **Prioritas:** P1 · **Butuh user:** tidak

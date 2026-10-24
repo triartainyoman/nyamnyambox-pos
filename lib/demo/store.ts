@@ -100,11 +100,14 @@ function seedProducts(): Product[] {
 function seedOrders(products: Product[]): { orders: Order[]; receiptCounter: number } {
   const rand = mulberry32(20261024);
   const orders: Order[] = [];
+  const dailyCounters = new Map<string, number>();
   let counter = 1;
 
   const cashiers = DEMO_PROFILES.filter((profile) => profile.is_active && profile.role === "EMPLOYEE");
   const pushOrder = (createdAt: Date, channelIndex: number, itemCount: number) => {
     const receiptDay = isoDateInJakarta(createdAt).replace(/-/g, "");
+    const dayNumber = (dailyCounters.get(receiptDay) ?? 0) + 1;
+    dailyCounters.set(receiptDay, dayNumber);
     const channel = CHANNELS[channelIndex % CHANNELS.length];
     const method = METHODS[Math.floor(rand() * METHODS.length)];
     const paid = rand() > 0.08;
@@ -126,7 +129,7 @@ function seedOrders(products: Product[]): { orders: Order[]; receiptCounter: num
 
     orders.push({
       id: `demo-order-${counter}`,
-      receipt_number: `NYB-${receiptDay}-${String(counter).padStart(4, "0")}`,
+      receipt_number: `NYB-${receiptDay}-${String(dayNumber).padStart(4, "0")}`,
       cashier_id: cashier?.id ?? DEMO_EMPLOYEE_ID,
       channel,
       payment_method: method,
