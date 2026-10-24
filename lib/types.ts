@@ -52,7 +52,7 @@ export interface Order {
   is_edited: boolean;
   customer_phone: string | null;
   created_at: string;
-  cashier?: Pick<Profile, "name" | "email"> | null;
+  cashier?: { name: string } | null;
   order_items?: OrderItem[];
 }
 

@@ -127,7 +127,7 @@ export function demoCreateOrder(input: CreateOrderInput): Order {
     is_edited: false,
     customer_phone: input.customer_phone ?? null,
     created_at: createdAt.toISOString(),
-    cashier: { name: cashier.name, email: cashier.email },
+    cashier: { name: cashier.name },
     order_items: items.map((item) => ({ ...item, order_id: id })),
   };
 

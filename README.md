@@ -120,6 +120,7 @@ Open **SQL Editor** and run the migrations in order:
 supabase/migrations/0001_init.sql
 supabase/migrations/0002_username_login.sql
 supabase/migrations/0003_harden_order_writes.sql
+supabase/migrations/0004_profile_privacy.sql
 ```
 
 `0001_init.sql` creates:
@@ -134,6 +135,8 @@ supabase/migrations/0003_harden_order_writes.sql
 `0002_username_login.sql` adds `profiles.username`, backfills existing rows, and keeps the bootstrap trigger in sync.
 
 `0003_harden_order_writes.sql` makes `orders`/`order_items` read-only for clients and pins `search_path` on every `SECURITY DEFINER` function. Order writes then only work through the RPCs.
+
+`0004_profile_privacy.sql` limits staff to reading their own profile, adds a minimal `staff_directory` view (`id`, `name`) for order display, and prevents owners from deactivating/demoting themselves or removing the last active owner.
 
 `supabase/seed.sql` can be run separately to re-seed the menu.
 
@@ -220,6 +223,8 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 - **Receipt numbers** — generated as `NYB-YYYYMMDD-NNNN` per Jakarta business day.
 - **`is_edited`** — set automatically by `update_order`, displayed on receipts and history.
 - **Analytics** — `dashboard_summary` aggregates today's metrics, 6-month sales, channel revenue, and top products in one call.
+- **Profile privacy** — staff can read only their own `profiles` row; owners can read all. Order history uses the minimal `staff_directory` view (`id`, `name`) so cashier names stay visible without exposing emails.
+- **Owner lockout protection** — an owner cannot deactivate or demote their own account, and the last active owner cannot be removed.
 - **Profile protection** — a trigger prevents non-owners from changing their own `role`, `is_active`, or `email`.
 - **No hard deletes** — products are deactivated instead of deleted so historical receipts stay intact.
 - **Pinned `search_path`** — every `SECURITY DEFINER` function uses `public, pg_temp` to prevent schema-shadowing attacks.
@@ -254,6 +259,8 @@ Requires **Node.js 20.9+**.
 - clients cannot `INSERT`/`UPDATE`/`DELETE` `orders` or `order_items` directly;
 - `create_order` / `update_order` still work and compute prices server-side;
 - cashiers only see today's orders, inactive accounts are locked out, and anonymous access is denied;
+- cashiers can read only their own profile and see cashier names through the minimal `staff_directory` view;
+- owners cannot deactivate/demote themselves, and the last active owner cannot be removed;
 - only `SELECT` policies remain on order tables and every `SECURITY DEFINER` function pins `search_path`.
 
 This is a fast local check. It does not replace testing against a real Supabase project (see T08 in `PRODUCTION_TODO.md`).
@@ -268,7 +275,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 4. Deploy.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
-   `0001_init.sql`, `0002_username_login.sql`, then `0003_harden_order_writes.sql`.
+   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, then `0004_profile_privacy.sql`.
 
 ---
 
@@ -302,6 +309,7 @@ supabase/
   migrations/0001_init.sql # schema, RLS, RPCs, seed
   migrations/0002_username_login.sql # username column, backfill, trigger
   migrations/0003_harden_order_writes.sql # RPC-only order writes, pinned search_path
+  migrations/0004_profile_privacy.sql # self/owner profile reads, owner lockout guard
   seed.sql                 # menu re-seed
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 proxy.ts                   # Next.js 16 auth middleware

@@ -160,7 +160,13 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      staff_directory: {
+        Row: {
+          id: string;
+          name: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       create_order: {

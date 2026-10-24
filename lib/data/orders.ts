@@ -4,17 +4,14 @@ import type {
   CreateOrderInput,
   Order,
   OrderItem,
-  Profile,
   UpdateOrderInput,
 } from "@/lib/types";
 
 type OrderQueryRow = Order & {
-  cashier?: Pick<Profile, "name" | "email"> | null;
   order_items?: Array<OrderItem & { product?: { name: string; image_url: string | null } | null }>;
 };
 
-const ORDER_SELECT =
-  "*, cashier:profiles(name, email), order_items(*, product:products(name, image_url))";
+const ORDER_SELECT = "*, order_items(*, product:products(name, image_url))";
 
 function client() {
   const supabase = getSupabaseBrowserClient();
@@ -22,10 +19,31 @@ function client() {
   return supabase;
 }
 
-function mapOrder(row: OrderQueryRow): Order {
+/**
+ * Cashier names come from a minimal `staff_directory` view instead of the
+ * `profiles` table. Cashiers can only read their own profile row, so embedding
+ * `profiles` here would either fail or hide the name on shared history.
+ */
+async function loadCashierNames(rows: OrderQueryRow[]): Promise<Map<string, string>> {
+  const ids = [
+    ...new Set(rows.map((row) => row.cashier_id).filter((id): id is string => Boolean(id))),
+  ];
+  if (ids.length === 0) return new Map();
+
+  const { data, error } = await client()
+    .from("staff_directory")
+    .select("id, name")
+    .in("id", ids);
+
+  if (error) throw new Error(error.message);
+  return new Map((data ?? []).map((row) => [row.id, row.name]));
+}
+
+function mapOrder(row: OrderQueryRow, cashierNames: Map<string, string>): Order {
+  const cashierName = row.cashier_id ? cashierNames.get(row.cashier_id) : undefined;
   return {
     ...row,
-    cashier: row.cashier ?? null,
+    cashier: cashierName ? { name: cashierName } : null,
     order_items: (row.order_items ?? []).map((item) => ({
       ...item,
       product: item.product ?? null,
@@ -47,7 +65,9 @@ export async function listOrders(fromISO: string, toISO: string): Promise<Order[
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as OrderQueryRow[]).map(mapOrder);
+  const rows = (data ?? []) as unknown as OrderQueryRow[];
+  const cashierNames = await loadCashierNames(rows);
+  return rows.map((row) => mapOrder(row, cashierNames));
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
@@ -66,7 +86,10 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return data ? mapOrder(data as unknown as OrderQueryRow) : null;
+  if (!data) return null;
+  const row = data as unknown as OrderQueryRow;
+  const cashierNames = await loadCashierNames([row]);
+  return mapOrder(row, cashierNames);
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {

@@ -107,6 +107,7 @@ async function main() {
   `);
 
   await db.exec(migration("0003_harden_order_writes.sql"));
+  await db.exec(migration("0004_profile_privacy.sql"));
 
   // --------------------------------------------------------------------------
   // Fixtures
@@ -309,6 +310,41 @@ async function main() {
   log("cashier cannot read yesterday's order items");
 
   // --------------------------------------------------------------------------
+  // Profile privacy
+  // --------------------------------------------------------------------------
+  const ownProfile = await runAs("authenticated", CASHIER_ID, () =>
+    db.query(`select id, email from public.profiles`),
+  );
+  assert.equal(ownProfile.rows.length, 1);
+  assert.equal(ownProfile.rows[0].id, CASHIER_ID);
+  log("cashier can only read their own profile");
+
+  const otherProfile = await runAs("authenticated", CASHIER_ID, () =>
+    db.query(`select email from public.profiles where id = $1`, [OWNER_ID]),
+  );
+  assert.equal(otherProfile.rows.length, 0);
+  log("cashier cannot read another staff email");
+
+  const directory = await runAs("authenticated", CASHIER_ID, () =>
+    db.query(`select id, name from public.staff_directory`),
+  );
+  assert.equal(directory.rows.length, 3);
+  assert.deepEqual(Object.keys(directory.rows[0]).sort(), ["id", "name"]);
+  log("cashier can read the minimal staff directory");
+
+  const escalation = await runAs("authenticated", CASHIER_ID, () =>
+    db.query(
+      `update public.profiles
+       set role = 'OWNER', is_active = true
+       where id = $1
+       returning role, is_active`,
+      [CASHIER_ID],
+    ),
+  );
+  assert.equal(escalation.rows[0].role, "EMPLOYEE");
+  log("cashier cannot escalate their own role");
+
+  // --------------------------------------------------------------------------
   // Inactive cashier
   // --------------------------------------------------------------------------
   await expectError(
@@ -394,6 +430,12 @@ async function main() {
   assert.equal(ownerOrders.rows[0].count, 2);
   log("owner sees all orders");
 
+  const ownerProfiles = await runAs("authenticated", OWNER_ID, () =>
+    db.query(`select count(*)::int as count from public.profiles`),
+  );
+  assert.equal(ownerProfiles.rows[0].count, 3);
+  log("owner can read all profiles");
+
   await expectError(
     "owner also cannot INSERT orders directly",
     () =>
@@ -406,6 +448,48 @@ async function main() {
         ),
       ),
     /permission denied/i,
+  );
+
+  // --------------------------------------------------------------------------
+  // Owner lockout protection
+  // --------------------------------------------------------------------------
+  await expectError(
+    "owner cannot deactivate their own account",
+    () =>
+      runAs("authenticated", OWNER_ID, () =>
+        db.query(`update public.profiles set is_active = false where id = $1`, [OWNER_ID]),
+      ),
+    /tidak dapat menonaktifkan/i,
+  );
+
+  await expectError(
+    "owner cannot demote their own role",
+    () =>
+      runAs("authenticated", OWNER_ID, () =>
+        db.query(`update public.profiles set role = 'EMPLOYEE' where id = $1`, [OWNER_ID]),
+      ),
+    /tidak dapat menonaktifkan atau menurunkan/i,
+  );
+
+  await db.query(`update public.profiles set role = 'OWNER' where id = $1`, [CASHIER_ID]);
+
+  const demoted = await runAs(
+    "authenticated",
+    OWNER_ID,
+    () =>
+      db.query(
+        `update public.profiles set role = 'EMPLOYEE' where id = $1 returning role`,
+        [CASHIER_ID],
+      ),
+    { commit: true },
+  );
+  assert.equal(demoted.rows[0].role, "EMPLOYEE");
+  log("owner can demote another owner while an active owner remains");
+
+  await expectError(
+    "last active owner cannot be deactivated",
+    () => db.query(`update public.profiles set is_active = false where id = $1`, [OWNER_ID]),
+    /Minimal harus ada satu Owner aktif/i,
   );
 
   // --------------------------------------------------------------------------

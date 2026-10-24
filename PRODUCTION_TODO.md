@@ -62,8 +62,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - `npm run test:rls` (PGlite) lulus 26 check: create/update via RPC tetap jalan dan menghitung harga server-side; INSERT/UPDATE/DELETE langsung ditolak; kasir hanya melihat order hari ini; akun nonaktif ditolak; anon ditolak; owner bisa melihat semua dan mengedit order lama; grant/policy/fungsi sesuai.
 - Aplikasi tetap memakai `.rpc("create_order")` / `.rpc("update_order")`; tidak ada DML langsung ke `orders`/`order_items` di kode aplikasi.
 
-### [ ] T03 — Proteksi akun Owner & privasi profil
-**Prioritas:** P0 · **Butuh user:** tidak
+### [x] T03 — Proteksi akun Owner & privasi profil
+**Prioritas:** P0 · **Butuh user:** tidak · **Selesai:** 2026-10-25
 
 - Trigger DB: Owner tidak bisa menurunkan role dirinya sendiri atau menonaktifkan akunnya sendiri; minimal harus selalu ada satu Owner aktif.
 - Batasi `profiles_select`: staff hanya bisa membaca profil sendiri; Owner bisa membaca semua. Untuk kebutuhan nama kasir di histori, gunakan kolom/VIEW terbatas atau embed yang tidak mengekspos email.
@@ -71,6 +71,13 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Uji dari sesi kasir dan owner.
 
 **Selesai jika:** kasir tidak bisa membaca email staff lain; owner tidak bisa mengunci dirinya sendiri; UI tetap berfungsi.
+
+**Hasil verifikasi:**
+- Migrasi `0004_profile_privacy.sql`: `profiles_select` sekarang `id = auth.uid() or is_owner()`; staff hanya membaca baris sendiri, owner membaca semua.
+- View `public.staff_directory` hanya mengekspos `id` dan `name`; dipakai histori/struk untuk menampilkan nama kasir tanpa email. Query order tidak lagi meng-embed `profiles`.
+- `protect_profile_fields` diperluas: owner tidak bisa menonaktifkan/menurunkan role sendiri; owner terakhir yang aktif tidak bisa dihapus; non-owner tetap tidak bisa mengubah `role`/`is_active`/`email`.
+- `npm run test:rls` (PGlite) lulus 34 check, termasuk: kasir hanya melihat profil sendiri, tidak bisa membaca email owner, bisa membaca `staff_directory`, tidak bisa menaikkan role sendiri; owner melihat semua profil, tidak bisa mengunci diri sendiri, tidak bisa menghapus owner terakhir, tetapi bisa menurunkan owner lain selama masih ada owner aktif.
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` ✅.
 
 ### [ ] T04 — Nomor nota berurutan per hari
 **Prioritas:** P1 · **Butuh user:** tidak

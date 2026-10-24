@@ -135,7 +135,7 @@ function seedOrders(products: Product[]): { orders: Order[]; receiptCounter: num
       is_edited: rand() > 0.94,
       customer_phone: channel === "WHATSAPP" || rand() > 0.8 ? "081234567890" : null,
       created_at: createdAt.toISOString(),
-      cashier: cashier ? { name: cashier.name, email: cashier.email } : null,
+      cashier: cashier ? { name: cashier.name } : null,
       order_items: items,
     });
     counter += 1;
