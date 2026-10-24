@@ -163,8 +163,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - `npm run build` dan `npm run lint` lulus; secret key tidak ada di `.next/static` maupun file yang di-track git.
 - Prosedur rotasi key dan cek kebocoran ditambahkan ke README.
 
-### [ ] T08 — Uji auth & RLS nyata
-**Prioritas:** P0 · **Butuh user:** tidak (butuh project dari T06/T07)
+### [x] T08 — Uji auth & RLS nyata
+**Prioritas:** P0 · **Butuh user:** tidak (butuh project dari T06/T07) · **Selesai:** 2026-10-25
 
 - Owner login dengan email → `/dashboard`; username owner ditolak.
 - Kasir login dengan username → `/pos`; akses `/dashboard`, `/products`, `/employees` ditolak.
@@ -174,6 +174,17 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Uji edit order hari ini dan penolakan edit order hari sebelumnya untuk kasir.
 
 **Selesai jika:** seluruh matriks di atas lulus dan hasilnya dicatat.
+
+**Hasil verifikasi:** diuji di production `https://nyamnyambox-pos.vercel.app` dengan akun sementara, lalu seluruh akun/order uji dihapus.
+- Owner email login → `/dashboard`. Username Owner (`e2eowner`) ditolak dengan pesan "Username atau password salah."
+- Kasir baru dibuat dari `/employees` (username `e2ekasir`), lalu login dengan username → `/pos` dan hanya melihat menu Kasir/Riwayat.
+- Kasir membuka `/dashboard`, `/products`, `/employees` → semuanya dialihkan ke `/pos`.
+- Kasir nonaktif: login username ditolak; sesi aktif menampilkan "Akun dinonaktifkan"; query `orders`/`products` mengembalikan kosong; `create_order` ditolak "Akun tidak aktif atau tidak terautentikasi".
+- RLS langsung: kasir hanya melihat order hari ini (order kemarin tidak terlihat, termasuk saat di-query by id); `profiles` hanya baris sendiri; `staff_directory` tetap bisa dibaca untuk nama kasir.
+- Percobaan DML langsung oleh kasir: insert/update/delete `orders`, insert `order_items`, dan insert `products` semuanya ditolak `42501`/RLS. `dashboard_summary` ditolak "Akses ditolak".
+- Edit order hari ini sebagai kasir berhasil lewat UI dan RPC (`is_edited = true`, total dihitung ulang server-side). Edit order kemarin sebagai kasir ditolak "Transaksi hanya dapat diedit pada hari yang sama".
+- Owner melihat kedua order (hari ini + kemarin) dan bisa mengedit order lama; tab "Kemarin" di histori menampilkan order tersebut.
+- Setelah cleanup: hanya 1 Owner asli, 0 order, 0 order item, dan counter nomor nota hari ini dihapus agar penomoran produksi mulai dari `0001`.
 
 ---
 
