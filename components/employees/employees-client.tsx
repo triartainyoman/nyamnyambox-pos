@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { AtSign, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
@@ -52,7 +52,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
             Kelola Karyawan
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Tambah akun kasir atau nonaktifkan akses yang tidak digunakan.
+            Tambah akun kasir (login dengan username) atau nonaktifkan akses yang tidak digunakan.
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
@@ -130,6 +130,12 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
                         </Badge>
                       )}
                     </div>
+                    {employee.role === "EMPLOYEE" ? (
+                      <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-stone-600">
+                        <AtSign className="size-3" />
+                        {employee.username}
+                      </p>
+                    ) : null}
                     <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                       <Mail className="size-3" />
                       {employee.email}

@@ -1,26 +1,75 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { DEMO_COOKIE, demoLogin } from "@/lib/demo/session";
 import { isSupabaseConfigured } from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
+import { normalizeUsername, validateUsername } from "@/lib/username";
 
 export async function loginAction(
   _prevState: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const email = String(formData.get("email") ?? "").trim();
+  const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "Email dan password wajib diisi." };
+  if (!identifier || !password) {
+    return { error: "Username/email dan password wajib diisi." };
   }
 
   if (!isSupabaseConfigured) {
-    return {
-      error: "Supabase belum dikonfigurasi. Gunakan akses demo atau isi .env.local terlebih dahulu.",
-    };
+    const profile = demoLogin(identifier, password);
+    if (!profile) {
+      return { error: "Username/email atau password salah." };
+    }
+
+    (await cookies()).set(DEMO_COOKIE, profile.role, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+    });
+    redirect("/pos");
+  }
+
+  let email = identifier;
+
+  // Cashiers sign in with a username. Owners (and other roles) must use email,
+  // so only active EMPLOYEE profiles can be resolved by username.
+  if (!identifier.includes("@")) {
+    const username = normalizeUsername(identifier);
+    if (validateUsername(username)) {
+      return { error: "Username atau password salah." };
+    }
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      return {
+        error:
+          "Login username belum tersedia. Hubungi Owner untuk menyelesaikan konfigurasi server.",
+      };
+    }
+
+    const admin = createSupabaseAdminClient(serviceKey);
+    const { data: profile, error: lookupError } = await admin
+      .from("profiles")
+      .select("email, is_active, role")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (lookupError) {
+      return {
+        error: "Gagal memproses login. Pastikan migrasi database sudah dijalankan.",
+      };
+    }
+    if (!profile || !profile.is_active || profile.role !== "EMPLOYEE") {
+      return { error: "Username atau password salah." };
+    }
+
+    email = profile.email;
   }
 
   const supabase = await createSupabaseServerClient();
@@ -28,7 +77,7 @@ export async function loginAction(
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return { error: "Email atau password salah. Silakan coba lagi." };
+    return { error: "Username/email atau password salah. Silakan coba lagi." };
   }
 
   redirect("/pos");

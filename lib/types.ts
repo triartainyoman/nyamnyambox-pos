@@ -13,6 +13,7 @@ export type PaymentStatus = "LUNAS" | "BELUM_LUNAS";
 
 export interface Profile {
   id: string;
+  username: string;
   name: string;
   email: string;
   role: UserRole;

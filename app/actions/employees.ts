@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
 
 import { getCurrentProfile } from "@/lib/auth";
 import { isOwnerRole } from "@/lib/constants";
-import { isSupabaseConfigured, SUPABASE_URL } from "@/lib/env";
+import { isSupabaseConfigured } from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ActionResult } from "@/lib/types";
+import { normalizeUsername, validateUsername } from "@/lib/username";
 
 export async function createEmployeeAction(formData: FormData): Promise<ActionResult> {
   const current = await getCurrentProfile();
@@ -15,14 +16,21 @@ export async function createEmployeeAction(formData: FormData): Promise<ActionRe
   }
 
   const name = String(formData.get("name") ?? "").trim();
+  const username = normalizeUsername(String(formData.get("username") ?? ""));
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
   if (name.length < 2) return { error: "Nama minimal 2 karakter." };
+
+  const usernameValidation = validateUsername(username);
+  if (usernameValidation) return { error: usernameValidation };
+
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "Format email tidak valid." };
   }
-  if (password.length < 6) return { error: "Password minimal 6 karakter." };
+  if (password.length < 6) {
+    return { error: "Password minimal 6 karakter." };
+  }
 
   if (!isSupabaseConfigured) {
     return { error: "Mode demo tidak membuat akun server. Gunakan mode demo untuk mencoba." };
@@ -36,15 +44,22 @@ export async function createEmployeeAction(formData: FormData): Promise<ActionRe
     };
   }
 
-  const admin = createClient(SUPABASE_URL, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const admin = createSupabaseAdminClient(serviceKey);
+
+  const { data: existing, error: lookupError } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (lookupError) return { error: lookupError.message };
+  if (existing) return { error: "Username sudah dipakai. Pilih username lain." };
 
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { name },
+    user_metadata: { name, username },
   });
 
   if (error) {
@@ -56,13 +71,17 @@ export async function createEmployeeAction(formData: FormData): Promise<ActionRe
 
   const { error: profileError } = await admin.from("profiles").upsert({
     id: data.user.id,
+    username,
     name,
     email,
     role: "EMPLOYEE",
     is_active: true,
   });
 
-  if (profileError) return { error: profileError.message };
+  if (profileError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    return { error: profileError.message };
+  }
 
   revalidatePath("/employees");
   return {};

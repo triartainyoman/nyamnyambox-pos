@@ -1,6 +1,7 @@
 "use client";
 
 import { getDemoDb, saveDemoDb, currentDemoProfile } from "@/lib/demo/store";
+import { normalizeUsername } from "@/lib/username";
 import { toBusinessDate } from "@/lib/utils";
 import type {
   CreateOrderInput,
@@ -244,13 +245,22 @@ export function demoListProfiles(): Profile[] {
   return [...getDemoDb().profiles].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function demoCreateEmployee(input: { name: string; email: string }): Profile {
+export function demoCreateEmployee(input: {
+  name: string;
+  username: string;
+  email: string;
+}): Profile {
   const db = getDemoDb();
+  const username = normalizeUsername(input.username);
+  if (db.profiles.some((profile) => profile.username === username)) {
+    throw new Error("Username sudah dipakai");
+  }
   if (db.profiles.some((profile) => profile.email.toLowerCase() === input.email.toLowerCase())) {
     throw new Error("Email sudah terdaftar");
   }
   const profile: Profile = {
     id: newId(),
+    username,
     name: input.name,
     email: input.email,
     role: "EMPLOYEE",

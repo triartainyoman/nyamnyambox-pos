@@ -34,13 +34,23 @@ export function useUpdateProfile() {
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { name: string; email: string; password: string }) => {
+    mutationFn: async (input: {
+      name: string;
+      username: string;
+      email: string;
+      password: string;
+    }) => {
       if (!isSupabaseConfigured) {
-        return demoCreateEmployee({ name: input.name, email: input.email });
+        return demoCreateEmployee({
+          name: input.name,
+          username: input.username,
+          email: input.email,
+        });
       }
 
       const formData = new FormData();
       formData.set("name", input.name);
+      formData.set("username", input.username);
       formData.set("email", input.email);
       formData.set("password", input.password);
 

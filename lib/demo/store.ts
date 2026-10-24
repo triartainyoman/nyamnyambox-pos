@@ -194,7 +194,24 @@ export function getDemoDb(): DemoDb {
     const raw = window.localStorage.getItem(DB_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as DemoDb;
-      if (parsed.version === 2) return parsed;
+      if (parsed.version === 2) {
+        // Older demo databases predate username-based cashier login.
+        const profiles = parsed.profiles.map((profile, index) => {
+          if (profile.username) return profile;
+          const emailPrefix =
+            profile.email
+              .split("@")[0]
+              ?.toLowerCase()
+              .replace(/[^a-z0-9._-]/g, "") || "";
+          const base = emailPrefix.length >= 3 ? emailPrefix : `kasir${index + 1}`;
+          return { ...profile, username: base };
+        });
+        if (profiles.some((profile, index) => profile.username !== parsed.profiles[index]?.username)) {
+          parsed.profiles = profiles;
+          saveDemoDb(parsed);
+        }
+        return parsed;
+      }
     }
   } catch {
     // Corrupt storage — fall back to a fresh seed.

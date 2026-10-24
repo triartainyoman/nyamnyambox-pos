@@ -89,8 +89,8 @@ export default async function LoginPage({
             </p>
           ) : null}
 
-          <p className="mt-6 text-center text-[11px] text-muted-foreground">
-            Akses dikelola oleh Owner toko. Hubungi admin jika lupa password.
+          <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
+            Kasir masuk dengan username, Owner dengan email. Hubungi admin jika lupa password.
           </p>
         </div>
       </section>

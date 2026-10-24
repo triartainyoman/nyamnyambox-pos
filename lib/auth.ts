@@ -27,6 +27,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   // is missing — fall back to a minimal employee profile.
   return {
     id: user.id,
+    username: user.user_metadata?.username ?? user.email?.split("@")[0] ?? "kasir",
     name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Kasir",
     email: user.email ?? "",
     role: "EMPLOYEE",

@@ -12,6 +12,7 @@ export type Database = {
       profiles: {
         Row: {
           id: string;
+          username: string;
           name: string;
           email: string;
           role: Database["public"]["Enums"]["user_role"];
@@ -20,6 +21,7 @@ export type Database = {
         };
         Insert: {
           id: string;
+          username: string;
           name: string;
           email: string;
           role?: Database["public"]["Enums"]["user_role"];
@@ -28,6 +30,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          username?: string;
           name?: string;
           email?: string;
           role?: Database["public"]["Enums"]["user_role"];

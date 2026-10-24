@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, UserPlus } from "lucide-react";
+import { AtSign, Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateEmployee } from "@/lib/hooks/use-employees";
 import { isSupabaseConfigured } from "@/lib/env";
+import { normalizeUsername, USERNAME_HINT, validateUsername } from "@/lib/username";
 
 export function EmployeeDialog({
   open,
@@ -27,6 +28,7 @@ export function EmployeeDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +39,14 @@ export function EmployeeDialog({
     event.preventDefault();
     setError(null);
 
+    const normalizedUsername = normalizeUsername(username);
     if (name.trim().length < 2) {
       setError("Nama minimal 2 karakter.");
+      return;
+    }
+    const usernameValidation = validateUsername(normalizedUsername);
+    if (usernameValidation) {
+      setError(usernameValidation);
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -53,10 +61,11 @@ export function EmployeeDialog({
     try {
       await createEmployee.mutateAsync({
         name: name.trim(),
+        username: normalizedUsername,
         email: email.trim(),
         password,
       });
-      toast.success("Akun kasir berhasil dibuat");
+      toast.success(`Akun kasir @${normalizedUsername} berhasil dibuat`);
       onOpenChange(false);
     } catch (submitError) {
       const message =
@@ -72,7 +81,7 @@ export function EmployeeDialog({
         <DialogHeader>
           <DialogTitle>Tambah Akun Kasir</DialogTitle>
           <DialogDescription>
-            Buat akun login untuk karyawan. Bagikan email dan password setelah tersimpan.
+            Buat akun login untuk karyawan. Kasir masuk dengan username dan password.
           </DialogDescription>
         </DialogHeader>
 
@@ -90,6 +99,31 @@ export function EmployeeDialog({
               />
             </div>
             <div>
+              <Label htmlFor="employee-username">Username</Label>
+              <div className="relative">
+                <AtSign className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="employee-username"
+                  value={username}
+                  onChange={(event) =>
+                    setUsername(event.target.value.toLowerCase().replace(/\s/g, ""))
+                  }
+                  placeholder="rizky"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="pl-9"
+                  minLength={3}
+                  maxLength={30}
+                  required
+                />
+              </div>
+              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+                {USERNAME_HINT}
+              </p>
+            </div>
+            <div>
               <Label htmlFor="employee-email">Email</Label>
               <Input
                 id="employee-email"
@@ -100,6 +134,9 @@ export function EmployeeDialog({
                 autoComplete="off"
                 required
               />
+              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+                Tetap wajib untuk akun Supabase dan pemulihan password.
+              </p>
             </div>
             <div>
               <Label htmlFor="employee-password">Password Awal</Label>
@@ -116,8 +153,8 @@ export function EmployeeDialog({
 
             {!isSupabaseConfigured && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-                Mode demo: akun hanya ditambahkan ke data lokal browser dan tidak bisa login
-                sungguhan.
+                Mode demo: akun hanya ditambahkan ke data lokal browser dan belum bisa dipakai
+                login. Gunakan akun demo rizky / sari untuk mencoba login kasir.
               </p>
             )}
 

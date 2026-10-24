@@ -29,13 +29,20 @@ exception when duplicate_object then null; end $$;
 -- ----------------------------------------------------------------------------
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  -- Cashier login handle. Owners sign in with email only (PRD 3.3).
+  username text not null,
   name text not null,
   email text unique not null,
   role public.user_role not null default 'EMPLOYEE',
   -- Added for the "deactivate cashier" requirement (PRD 3.2).
   is_active boolean not null default true,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint profiles_username_format check (
+    username ~ '^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$'
+  )
 );
+
+create unique index if not exists profiles_username_key on public.profiles (lower(username));
 
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
@@ -87,10 +94,34 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  base_username text;
+  candidate text;
+  suffix int := 0;
 begin
-  insert into public.profiles (id, name, email, role)
+  base_username := lower(
+    coalesce(
+      nullif(new.raw_user_meta_data->>'username', ''),
+      split_part(new.email, '@', 1)
+    )
+  );
+  base_username := regexp_replace(base_username, '[^a-z0-9._-]', '', 'g');
+
+  -- Manual auth users may have an email prefix that is too short or invalid.
+  if base_username !~ '^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$' then
+    base_username := 'user';
+  end if;
+
+  candidate := base_username;
+  while exists (select 1 from public.profiles where lower(username) = candidate) loop
+    suffix := suffix + 1;
+    candidate := left(base_username, 26) || suffix::text;
+  end loop;
+
+  insert into public.profiles (id, username, name, email, role)
   values (
     new.id,
+    candidate,
     coalesce(nullif(new.raw_user_meta_data->>'name', ''), split_part(new.email, '@', 1)),
     new.email,
     'EMPLOYEE' -- roles are assigned by the Owner / service role, never via signup metadata
@@ -114,6 +145,7 @@ set search_path = public
 as $$
 begin
   if auth.uid() is not null and not public.is_owner() then
+    new.username := old.username;
     new.role := old.role;
     new.is_active := old.is_active;
     new.email := old.email;

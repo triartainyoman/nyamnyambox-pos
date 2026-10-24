@@ -2,13 +2,22 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Store } from "lucide-react";
+import {
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  Store,
+  UserRound,
+} from "lucide-react";
 
 import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_COOKIE } from "@/lib/demo/session";
+import { DEMO_COOKIE, DEMO_PASSWORD } from "@/lib/demo/session";
 
 export function LoginForm({ demoMode }: { demoMode: boolean }) {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
@@ -24,19 +33,25 @@ export function LoginForm({ demoMode }: { demoMode: boolean }) {
     <div className="space-y-5">
       <form action={formAction} className="space-y-4">
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="identifier">Username atau Email</Label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="nama@nyamnyambox.com"
+              id="identifier"
+              name="identifier"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="kasir atau owner@email.com"
               className="pl-9"
               required
             />
           </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+            Kasir masuk dengan username. Owner masuk dengan email.
+          </p>
         </div>
 
         <div>
@@ -96,6 +111,16 @@ export function LoginForm({ demoMode }: { demoMode: boolean }) {
             <Button type="button" variant="outline" onClick={() => enterDemo("EMPLOYEE")}>
               <ShieldCheck className="size-4" /> Kasir
             </Button>
+          </div>
+          <div className="rounded-xl bg-stone-100 p-2.5 text-[10px] leading-relaxed text-stone-600">
+            <p className="font-semibold text-stone-700">Akun demo</p>
+            <p>
+              Kasir: <span className="font-semibold">rizky</span> / {DEMO_PASSWORD}
+            </p>
+            <p>
+              Owner: <span className="font-semibold">owner@nyamnyambox.demo</span> /{" "}
+              {DEMO_PASSWORD}
+            </p>
           </div>
         </div>
       )}
