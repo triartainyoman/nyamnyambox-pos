@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 import { demoLogin } from "@/lib/demo/session";
 import { isAuthConfigured, isDemoMode, isSupabaseConfigured } from "@/lib/env";
+import { friendlyError, UNAVAILABLE_ERROR } from "@/lib/errors";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
@@ -68,9 +69,13 @@ export async function loginAction(
       .maybeSingle();
 
     if (lookupError) {
-      return {
-        error: "Gagal memproses login. Pastikan migrasi database sudah dijalankan.",
-      };
+      const code = (lookupError as { code?: string }).code;
+      if (code === "42P01" || code === "42703") {
+        return {
+          error: "Gagal memproses login. Pastikan migrasi database sudah dijalankan.",
+        };
+      }
+      return { error: friendlyError(lookupError, "Gagal memproses login. Coba lagi.") };
     }
     if (!profile || !profile.is_active || profile.role !== "EMPLOYEE") {
       return { error: "Username atau password salah." };
@@ -84,7 +89,20 @@ export async function loginAction(
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return { error: "Username/email atau password salah. Silakan coba lagi." };
+    const status = typeof error.status === "number" ? error.status : 0;
+    const detail = `${error.name} ${error.message}`.toLowerCase();
+    const infrastructureFailure =
+      status === 0 ||
+      status >= 500 ||
+      detail.includes("fetch") ||
+      detail.includes("network") ||
+      detail.includes("timeout");
+
+    return {
+      error: infrastructureFailure
+        ? friendlyError(error, UNAVAILABLE_ERROR)
+        : "Username/email atau password salah. Silakan coba lagi.",
+    };
   }
 
   redirect("/pos");

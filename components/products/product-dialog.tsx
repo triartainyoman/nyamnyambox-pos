@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { friendlyError } from "@/lib/errors";
 import { useCreateProduct, useUpdateProduct } from "@/lib/hooks/use-products";
 import type { Product } from "@/lib/types";
 import { cn, formatRupiah } from "@/lib/utils";
@@ -85,8 +86,7 @@ export function ProductDialog({
       }
       onOpenChange(false);
     } catch (submitError) {
-      const message =
-        submitError instanceof Error ? submitError.message : "Gagal menyimpan menu";
+      const message = friendlyError(submitError, "Gagal menyimpan menu");
       setError(message);
       toast.error(message);
     }

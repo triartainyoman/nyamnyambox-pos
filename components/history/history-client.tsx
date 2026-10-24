@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  AlertCircle,
   CalendarDays,
   ChevronRight,
   Clock,
@@ -15,6 +14,7 @@ import { OrderDetailSheet } from "@/components/history/order-detail-sheet";
 import { ChannelBadge, EditedBadge, PaymentBadge } from "@/components/order-badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { QueryError } from "@/components/ui/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrders } from "@/lib/hooks/use-orders";
 import type { Order } from "@/lib/types";
@@ -137,18 +137,12 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
         </div>
 
         {isError ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-red-200 bg-red-50/50 py-12 text-center">
-            <AlertCircle className="size-8 text-red-500" />
-            <div>
-              <p className="text-sm font-semibold text-red-700">Gagal memuat transaksi</p>
-              <p className="text-xs text-red-600/80">
-                {error instanceof Error ? error.message : "Terjadi kesalahan"}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="size-3.5" /> Coba lagi
-            </Button>
-          </div>
+          <QueryError
+            error={error}
+            title="Gagal memuat transaksi"
+            fallback="Transaksi belum dapat dimuat."
+            onRetry={() => refetch()}
+          />
         ) : isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, index) => (

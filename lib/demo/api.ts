@@ -1,6 +1,7 @@
 "use client";
 
 import { getDemoDb, saveDemoDb, currentDemoProfile } from "@/lib/demo/store";
+import { UserFacingError } from "@/lib/errors";
 import { normalizeUsername } from "@/lib/username";
 import { toBusinessDate } from "@/lib/utils";
 import type {
@@ -71,7 +72,7 @@ export function demoCreateProduct(input: ProductInput): Product {
 export function demoUpdateProduct(id: string, input: ProductInput): Product {
   const db = getDemoDb();
   const index = db.products.findIndex((product) => product.id === id);
-  if (index < 0) throw new Error("Produk tidak ditemukan");
+  if (index < 0) throw new UserFacingError("Produk tidak ditemukan");
   const updated: Product = {
     ...db.products[index],
     name: input.name,
@@ -104,13 +105,13 @@ export function demoListOrders(fromISO: string, toISO: string): Order[] {
 }
 
 export function demoCreateOrder(input: CreateOrderInput): Order {
-  if (!input.items.length) throw new Error("Keranjang masih kosong");
+  if (!input.items.length) throw new UserFacingError("Keranjang masih kosong");
   const db = getDemoDb();
   const cashier = currentDemoProfile();
 
   const items = input.items.map((item) => {
     const product = db.products.find((candidate) => candidate.id === item.product_id);
-    if (!product) throw new Error("Produk tidak tersedia");
+    if (!product) throw new UserFacingError("Produk tidak tersedia");
     return {
       id: newId(),
       order_id: "",
@@ -148,14 +149,14 @@ export function demoCreateOrder(input: CreateOrderInput): Order {
 }
 
 export function demoUpdateOrder(input: UpdateOrderInput): Order {
-  if (!input.items.length) throw new Error("Pesanan harus memiliki minimal satu item");
+  if (!input.items.length) throw new UserFacingError("Pesanan harus memiliki minimal satu item");
   const db = getDemoDb();
   const index = db.orders.findIndex((order) => order.id === input.order_id);
-  if (index < 0) throw new Error("Transaksi tidak ditemukan");
+  if (index < 0) throw new UserFacingError("Transaksi tidak ditemukan");
 
   const items = input.items.map((item) => {
     const product = db.products.find((candidate) => candidate.id === item.product_id);
-    if (!product) throw new Error("Produk tidak tersedia");
+    if (!product) throw new UserFacingError("Produk tidak tersedia");
     return {
       id: newId(),
       order_id: input.order_id,
@@ -264,10 +265,10 @@ export function demoCreateEmployee(input: {
   const db = getDemoDb();
   const username = normalizeUsername(input.username);
   if (db.profiles.some((profile) => profile.username === username)) {
-    throw new Error("Username sudah dipakai");
+    throw new UserFacingError("Username sudah dipakai");
   }
   if (db.profiles.some((profile) => profile.email.toLowerCase() === input.email.toLowerCase())) {
-    throw new Error("Email sudah terdaftar");
+    throw new UserFacingError("Email sudah terdaftar");
   }
   const profile: Profile = {
     id: newId(),
@@ -289,7 +290,7 @@ export function demoUpdateProfile(
 ): Profile {
   const db = getDemoDb();
   const index = db.profiles.findIndex((profile) => profile.id === id);
-  if (index < 0) throw new Error("Akun tidak ditemukan");
+  if (index < 0) throw new UserFacingError("Akun tidak ditemukan");
   const updated = { ...db.profiles[index], ...patch };
   db.profiles[index] = updated;
   saveDemoDb(db);

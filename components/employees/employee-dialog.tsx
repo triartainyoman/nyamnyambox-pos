@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateEmployee } from "@/lib/hooks/use-employees";
 import { isDemoMode } from "@/lib/env";
+import { friendlyError } from "@/lib/errors";
 import { normalizeUsername, USERNAME_HINT, validateUsername } from "@/lib/username";
 
 export function EmployeeDialog({
@@ -68,8 +69,7 @@ export function EmployeeDialog({
       toast.success(`Akun kasir @${normalizedUsername} berhasil dibuat`);
       onOpenChange(false);
     } catch (submitError) {
-      const message =
-        submitError instanceof Error ? submitError.message : "Gagal membuat akun kasir";
+      const message = friendlyError(submitError, "Gagal membuat akun kasir");
       setError(message);
       toast.error(message);
     }

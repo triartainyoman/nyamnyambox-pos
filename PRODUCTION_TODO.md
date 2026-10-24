@@ -98,8 +98,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Demo mode disamakan: seed dan order baru menghitung nomor per tanggal bisnis; diuji membuat order baru setelah 9 order hari ini menghasilkan `NYB-20261025-0010`.
 - `npx tsc --noEmit`, `npm run lint`, `npm run build` ✅.
 
-### [ ] T05 — Error boundary & error handling
-**Prioritas:** P1 · **Butuh user:** tidak
+### [x] T05 — Error boundary & error handling
+**Prioritas:** P1 · **Butuh user:** tidak · **Selesai:** 2026-10-25
 
 - Tambah `app/error.tsx`, `app/global-error.tsx`, `app/not-found.tsx`, dan `error.tsx` untuk route group `(app)`.
 - Petakan error Supabase/RPC menjadi pesan Indonesia yang aman; jangan tampilkan detail internal.
@@ -107,6 +107,16 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Tambah `loading.tsx` bila diperlukan.
 
 **Selesai jika:** error buatan (mis. RPC gagal) menampilkan layar ramah + tombol coba lagi, bukan stack trace.
+
+**Hasil verifikasi:**
+- `lib/errors.ts`: `UserFacingError` + `friendlyError()` memetakan error Postgres/PostgREST (`42501`, `23505`, `23503`, `23514`, `42P01`, `PGRST116`, `PGRST301`, timeout), error jaringan, sesi berakhir, dan fallback generik. Pesan internal (nama tabel, constraint, SQL) tidak pernah diteruskan.
+- Whitelist pesan bisnis dari RPC/trigger/demo (`Keranjang masih kosong`, `Transaksi hanya dapat diedit pada hari yang sama`, `Minimal harus ada satu Owner aktif`, dll.) tetap tampil apa adanya.
+- Semua data layer (`orders`, `dashboard`, `products`, `profiles`), demo API, dan server action (`auth`, `employees`) sekarang melempar/mengembalikan pesan aman. Toast dan dialog memakai `friendlyError`, bukan `error.message` mentah.
+- Error boundary: `app/error.tsx` (root), `app/(app)/error.tsx` (di dalam app shell), `app/global-error.tsx` (dokumen mandiri, inline CSS), `app/not-found.tsx` (404). Semua memakai `retry()` sesuai signature Next 16.
+- `components/ui/query-error.tsx` dipakai di POS, history, dashboard, products, dan employees; products/employees sebelumnya belum punya state error. Tombol **Coba lagi** memanggil `refetch()`.
+- `app/(app)/loading.tsx` sempat dicoba tetapi membuat streaming dev tersangkut di skeleton, jadi dihapus. Loading per halaman tetap memakai skeleton lokal yang sudah ada.
+- Uji runtime: route 404 menampilkan halaman 404; route yang sengaja melempar error menampilkan layar ramah + `Coba lagi` tanpa membocorkan pesan SQL; query products yang gagal menampilkan fallback aman, lalu pulih setelah `Coba lagi` dan flag error dihapus.
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` ✅.
 
 ---
 

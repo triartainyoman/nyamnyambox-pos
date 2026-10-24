@@ -25,6 +25,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ORDER_CHANNELS, PAYMENT_METHODS, SPICE_PRESETS } from "@/lib/constants";
+import { friendlyError } from "@/lib/errors";
 import { useCreateOrder } from "@/lib/hooks/use-orders";
 import type { Order, OrderChannel, PaymentMethod, PaymentStatus } from "@/lib/types";
 import { cn, formatRupiah } from "@/lib/utils";
@@ -81,7 +82,7 @@ export function CartSheet({
       onOpenChange(false);
       onCreated(order);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal membuat pesanan");
+      toast.error(friendlyError(error, "Gagal membuat pesanan"));
     }
   }
 

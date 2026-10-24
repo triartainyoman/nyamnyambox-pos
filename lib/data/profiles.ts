@@ -1,10 +1,11 @@
 import { isDemoMode } from "@/lib/env";
+import { CONFIG_ERROR, friendlyError, UserFacingError } from "@/lib/errors";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 
 function client() {
   const supabase = getSupabaseBrowserClient();
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi");
+  if (!supabase) throw new UserFacingError(CONFIG_ERROR);
   return supabase;
 }
 
@@ -19,7 +20,7 @@ export async function listProfiles(): Promise<Profile[]> {
     .select("*")
     .order("name", { ascending: true });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat data karyawan."));
   return (data ?? []) as Profile[];
 }
 
@@ -39,7 +40,7 @@ export async function updateProfile(
     .select("*")
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memperbarui akun karyawan."));
   return data as Profile;
 }
 

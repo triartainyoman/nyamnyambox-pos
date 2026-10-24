@@ -7,8 +7,10 @@ import { toast } from "sonner";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { QueryError } from "@/components/ui/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { friendlyError } from "@/lib/errors";
 import { useEmployees, useUpdateProfile } from "@/lib/hooks/use-employees";
 import { ROLE_LABELS, isOwnerRole } from "@/lib/constants";
 import type { Profile, UserRole } from "@/lib/types";
@@ -21,7 +23,7 @@ const ROLE_VARIANT: Record<UserRole, "default" | "info" | "secondary"> = {
 };
 
 export function EmployeesClient({ currentProfileId }: { currentProfileId: string }) {
-  const { data: employees, isLoading } = useEmployees();
+  const { data: employees, isLoading, isError, error, refetch } = useEmployees();
   const updateProfile = useUpdateProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -37,7 +39,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
         nextValue ? `${employee.name} diaktifkan` : `${employee.name} dinonaktifkan`,
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal mengubah status akun");
+      toast.error(friendlyError(error, "Gagal mengubah status akun"));
     }
   }
 
@@ -104,6 +106,13 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
               <Skeleton key={index} className="h-[70px] w-full" />
             ))}
           </div>
+        ) : isError ? (
+          <QueryError
+            error={error}
+            title="Gagal memuat data karyawan"
+            fallback="Daftar akun belum dapat dimuat."
+            onRetry={() => refetch()}
+          />
         ) : employees?.length ? (
           <div className="space-y-2">
             {employees.map((employee) => {

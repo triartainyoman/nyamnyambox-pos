@@ -35,6 +35,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { PAYMENT_METHODS } from "@/lib/constants";
+import { friendlyError } from "@/lib/errors";
 import { useProducts } from "@/lib/hooks/use-products";
 import { useReceiptSize } from "@/lib/hooks/use-receipt-size";
 import { useUpdateOrder } from "@/lib/hooks/use-orders";
@@ -158,7 +159,7 @@ export function OrderDetailSheet({
       onUpdated(updated);
       setEditing(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal memperbarui transaksi");
+      toast.error(friendlyError(error, "Gagal memperbarui transaksi"));
     }
   }
 

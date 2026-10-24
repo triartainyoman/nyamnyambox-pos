@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, ArrowRight, RefreshCw, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 
 import { ProductCard } from "@/components/pos/product-card";
 import { CartSheet } from "@/components/pos/cart-sheet";
 import { ReceiptModal } from "@/components/receipt/receipt-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { QueryError } from "@/components/ui/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts } from "@/lib/hooks/use-products";
 import { formatRupiah, todayLabel } from "@/lib/utils";
@@ -52,18 +53,12 @@ export function PosClient({ cashierName }: { cashierName: string }) {
           </div>
 
           {isError ? (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-red-200 bg-red-50/50 py-12 text-center">
-              <AlertCircle className="size-8 text-red-500" />
-              <div>
-                <p className="text-sm font-semibold text-red-700">Gagal memuat menu</p>
-                <p className="text-xs text-red-600/80">
-                  {error instanceof Error ? error.message : "Terjadi kesalahan"}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                <RefreshCw className="size-3.5" /> Coba lagi
-              </Button>
-            </div>
+            <QueryError
+              error={error}
+              title="Gagal memuat menu"
+              fallback="Menu belum dapat dimuat."
+              onRetry={() => refetch()}
+            />
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
               {isLoading

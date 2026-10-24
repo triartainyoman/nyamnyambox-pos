@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createEmployeeAction } from "@/app/actions/employees";
 import { listProfiles, updateProfile } from "@/lib/data/profiles";
 import { isDemoMode } from "@/lib/env";
+import { UserFacingError } from "@/lib/errors";
 import type { Profile } from "@/lib/types";
 
 export function useEmployees() {
@@ -55,7 +56,7 @@ export function useCreateEmployee() {
       formData.set("password", input.password);
 
       const result = await createEmployeeAction(formData);
-      if (result?.error) throw new Error(result.error);
+      if (result?.error) throw new UserFacingError(result.error);
       return null;
     },
     onSuccess: () => {

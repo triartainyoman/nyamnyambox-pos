@@ -1,4 +1,5 @@
 import { isDemoMode } from "@/lib/env";
+import { CONFIG_ERROR, friendlyError, UserFacingError } from "@/lib/errors";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
   CreateOrderInput,
@@ -15,7 +16,7 @@ const ORDER_SELECT = "*, order_items(*, product:products(name, image_url))";
 
 function client() {
   const supabase = getSupabaseBrowserClient();
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi");
+  if (!supabase) throw new UserFacingError(CONFIG_ERROR);
   return supabase;
 }
 
@@ -35,7 +36,7 @@ async function loadCashierNames(rows: OrderQueryRow[]): Promise<Map<string, stri
     .select("id, name")
     .in("id", ids);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat nama kasir."));
   return new Map((data ?? []).map((row) => [row.id, row.name]));
 }
 
@@ -64,7 +65,7 @@ export async function listOrders(fromISO: string, toISO: string): Promise<Order[
     .lt("created_at", toISO)
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat transaksi."));
   const rows = (data ?? []) as unknown as OrderQueryRow[];
   const cashierNames = await loadCashierNames(rows);
   return rows.map((row) => mapOrder(row, cashierNames));
@@ -85,7 +86,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     .eq("id", orderId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat transaksi."));
   if (!data) return null;
   const row = data as unknown as OrderQueryRow;
   const cashierNames = await loadCashierNames([row]);
@@ -110,9 +111,9 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     })),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal menyimpan pesanan."));
   const created = await getOrderById(data.id);
-  if (!created) throw new Error("Transaksi tersimpan tetapi gagal dimuat");
+  if (!created) throw new UserFacingError("Transaksi tersimpan tetapi gagal dimuat");
   return created;
 }
 
@@ -134,8 +135,8 @@ export async function updateOrder(input: UpdateOrderInput): Promise<Order> {
     })),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memperbarui pesanan."));
   const updated = await getOrderById(data.id);
-  if (!updated) throw new Error("Transaksi tersimpan tetapi gagal dimuat");
+  if (!updated) throw new UserFacingError("Transaksi tersimpan tetapi gagal dimuat");
   return updated;
 }

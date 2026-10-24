@@ -243,6 +243,15 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 
 ---
 
+## Error handling
+
+- `lib/errors.ts` is the single place that turns Supabase/PostgREST/network failures into short Indonesian messages. Internal details (table names, constraints, SQL, stack traces) never reach the UI.
+- Business rules raised by the RPCs/triggers are whitelisted, so messages like “Transaksi hanya dapat diedit pada hari yang sama” still appear.
+- Failed queries show a retry card (`components/ui/query-error.tsx`) on POS, history, dashboard, products, and employees.
+- Route-level fallbacks live in `app/error.tsx`, `app/(app)/error.tsx`, `app/global-error.tsx`, and `app/not-found.tsx`. They use Next.js 16's `retry()` to refetch and re-render.
+
+---
+
 ## Scripts
 
 ```bash

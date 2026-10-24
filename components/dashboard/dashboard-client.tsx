@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import {
-  AlertCircle,
   ArrowUpRight,
   Banknote,
   Clock,
   ReceiptText,
-  RefreshCw,
   ShoppingBag,
   TrendingUp,
   Trophy,
@@ -19,6 +17,7 @@ import { ChannelBadge, PaymentBadge } from "@/components/order-badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { QueryError } from "@/components/ui/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { channelMeta } from "@/lib/constants";
 import { useDashboard } from "@/lib/hooks/use-dashboard";
@@ -106,18 +105,12 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
       </header>
 
       {isError ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-red-200 bg-red-50/50 py-12 text-center">
-          <AlertCircle className="size-8 text-red-500" />
-          <div>
-            <p className="text-sm font-semibold text-red-700">Gagal memuat analitik</p>
-            <p className="text-xs text-red-600/80">
-              {error instanceof Error ? error.message : "Terjadi kesalahan"}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="size-3.5" /> Coba lagi
-          </Button>
-        </div>
+        <QueryError
+          error={error}
+          title="Gagal memuat analitik"
+          fallback="Ringkasan penjualan belum dapat dimuat."
+          onRetry={() => refetch()}
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">

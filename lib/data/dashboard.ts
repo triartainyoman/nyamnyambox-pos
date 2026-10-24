@@ -1,4 +1,5 @@
 import { isDemoMode } from "@/lib/env";
+import { CONFIG_ERROR, friendlyError, UserFacingError } from "@/lib/errors";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { businessDayRange, formatMonthLabel, toBusinessDate } from "@/lib/utils";
 import type { DashboardData, DashboardSummary, Order } from "@/lib/types";
@@ -14,7 +15,7 @@ const EMPTY_SUMMARY: DashboardSummary = {
 
 function client() {
   const supabase = getSupabaseBrowserClient();
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi");
+  if (!supabase) throw new UserFacingError(CONFIG_ERROR);
   return supabase;
 }
 
@@ -35,7 +36,7 @@ export async function getDashboard(): Promise<DashboardData> {
   }
 
   const { data, error } = await client().rpc("dashboard_summary");
-  if (error) throw new Error(error.message);
+  if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat analitik."));
 
   const raw = (data ?? EMPTY_SUMMARY) as unknown as Partial<DashboardSummary>;
   const summary: DashboardSummary = {

@@ -8,14 +8,16 @@ import { ProductDialog } from "@/components/products/product-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { QueryError } from "@/components/ui/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { friendlyError } from "@/lib/errors";
 import { useProducts, useSetProductActive } from "@/lib/hooks/use-products";
 import type { Product } from "@/lib/types";
 import { formatNumber, formatRupiah } from "@/lib/utils";
 
 export function ProductsClient() {
-  const { data: products, isLoading } = useProducts(false);
+  const { data: products, isLoading, isError, error, refetch } = useProducts(false);
   const setActive = useSetProductActive();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,7 +47,7 @@ export function ProductsClient() {
       await setActive.mutateAsync({ id: product.id, isActive: nextValue });
       toast.success(nextValue ? `${product.name} diaktifkan` : `${product.name} dinonaktifkan`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal mengubah status menu");
+      toast.error(friendlyError(error, "Gagal mengubah status menu"));
     }
   }
 
@@ -113,6 +115,13 @@ export function ProductsClient() {
             <Skeleton key={index} className="h-[86px] w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <QueryError
+          error={error}
+          title="Gagal memuat menu"
+          fallback="Daftar menu belum dapat dimuat."
+          onRetry={() => refetch()}
+        />
       ) : filtered.length ? (
         <div className="grid gap-2.5 md:grid-cols-2">
           {filtered.map((product) => {
