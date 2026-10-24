@@ -143,6 +143,8 @@ supabase/migrations/0005_daily_receipt_numbers.sql
 
 `supabase/seed.sql` can be run separately to re-seed the menu.
 
+After the migrations, run `supabase/verify.sql` in the SQL Editor. Every row should show `OK`. The `active owner exists` check is expected to show `FAIL` until you promote the first Owner in step 4.
+
 ### 3. Configure environment variables
 
 ```bash
@@ -289,6 +291,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
    `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, then `0005_daily_receipt_numbers.sql`.
+7. Run `supabase/verify.sql` and confirm every row shows `OK` (after the first Owner is promoted).
 
 ---
 
@@ -325,6 +328,7 @@ supabase/
   migrations/0004_profile_privacy.sql # self/owner profile reads, owner lockout guard
   migrations/0005_daily_receipt_numbers.sql # per-day receipt counters
   seed.sql                 # menu re-seed
+  verify.sql               # production schema verification queries
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 proxy.ts                   # Next.js 16 auth middleware
 ```

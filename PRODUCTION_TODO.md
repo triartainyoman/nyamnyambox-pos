@@ -133,6 +133,11 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 
 **Selesai jika:** schema + seed + owner ada; query `select * from pg_policies` menunjukkan policy yang diharapkan.
 
+**Status:** menunggu akses project Supabase (belum ada project/kredensial).
+- `supabase/verify.sql` sudah dibuat: 16 check untuk tabel, enum, seed, index username, RLS, policy yang diharapkan/terlarang, fungsi + `search_path`, grant order, `receipt_seq` yang sudah dihapus, `receipt_counters` privat, `staff_directory`, grant RPC, penolakan anon, dan owner aktif.
+- `verify.sql` sudah divalidasi terhadap PGlite dengan urutan migrasi + grant default Supabase; seluruh 16 check `OK` (termasuk fixture owner aktif). Artefak ini belum dijalankan di Supabase nyata.
+- Belum ada perubahan pada database production.
+
 ### [ ] T07 — Konfigurasi environment lokal & production
 **Prioritas:** P0 · **Butuh user:** ya (nilai secret)
 
