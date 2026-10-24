@@ -1,5 +1,4 @@
-import { demoDashboard } from "@/lib/demo/api";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { businessDayRange, formatMonthLabel, toBusinessDate } from "@/lib/utils";
 import type { DashboardData, DashboardSummary, Order } from "@/lib/types";
@@ -23,7 +22,8 @@ export async function getDashboard(): Promise<DashboardData> {
   const today = toBusinessDate(new Date());
   const { startISO, endISO } = businessDayRange(today);
 
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
+    const { demoDashboard } = await import("@/lib/demo/api");
     const summary = demoDashboard();
     const recent = await listOrders(startISO, endISO);
     return {

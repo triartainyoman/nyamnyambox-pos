@@ -3,8 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { DEMO_COOKIE, demoLogin } from "@/lib/demo/session";
-import { isSupabaseConfigured } from "@/lib/env";
+import { DEMO_COOKIE } from "@/lib/demo/constants";
+import { demoLogin } from "@/lib/demo/session";
+import { isAuthConfigured, isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
@@ -17,11 +18,17 @@ export async function loginAction(
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
+  if (!isAuthConfigured) {
+    return {
+      error: "Aplikasi belum dikonfigurasi. Hubungi admin untuk menyelesaikan setup server.",
+    };
+  }
+
   if (!identifier || !password) {
     return { error: "Username/email dan password wajib diisi." };
   }
 
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
     const profile = demoLogin(identifier, password);
     if (!profile) {
       return { error: "Username/email atau password salah." };
@@ -84,6 +91,10 @@ export async function loginAction(
 }
 
 export async function logoutAction(): Promise<void> {
+  if (isDemoMode) {
+    (await cookies()).delete(DEMO_COOKIE);
+  }
+
   if (isSupabaseConfigured) {
     const supabase = await createSupabaseServerClient();
     await supabase?.auth.signOut();

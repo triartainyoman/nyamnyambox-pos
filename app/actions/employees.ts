@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentProfile } from "@/lib/auth";
 import { isOwnerRole } from "@/lib/constants";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ActionResult } from "@/lib/types";
 import { normalizeUsername, validateUsername } from "@/lib/username";
@@ -32,8 +32,15 @@ export async function createEmployeeAction(formData: FormData): Promise<ActionRe
     return { error: "Password minimal 6 karakter." };
   }
 
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
     return { error: "Mode demo tidak membuat akun server. Gunakan mode demo untuk mencoba." };
+  }
+
+  if (!isSupabaseConfigured) {
+    return {
+      error:
+        "Aplikasi belum dikonfigurasi. Hubungi admin untuk menyelesaikan setup server sebelum membuat akun.",
+    };
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

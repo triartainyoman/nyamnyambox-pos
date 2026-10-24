@@ -1,16 +1,20 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { DEMO_COOKIE, demoProfileForRole } from "@/lib/demo/session";
-import { isSupabaseConfigured } from "@/lib/env";
+import { DEMO_COOKIE } from "@/lib/demo/constants";
+import { demoProfileForRole } from "@/lib/demo/profiles";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
 export async function getCurrentProfile(): Promise<Profile | null> {
-  if (!isSupabaseConfigured) {
+  // Only trust the unsigned demo cookie in explicit, non-production demo mode.
+  if (isDemoMode) {
     const role = (await cookies()).get(DEMO_COOKIE)?.value;
     return demoProfileForRole(role);
   }
+
+  if (!isSupabaseConfigured) return null;
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;

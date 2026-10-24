@@ -1,5 +1,4 @@
-import { demoCreateProduct, demoListProducts, demoSetProductActive, demoUpdateProduct } from "@/lib/demo/api";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Product, ProductInput } from "@/lib/types";
 
@@ -10,7 +9,10 @@ function client() {
 }
 
 export async function listProducts(activeOnly = false): Promise<Product[]> {
-  if (!isSupabaseConfigured) return demoListProducts(activeOnly);
+  if (isDemoMode) {
+    const { demoListProducts } = await import("@/lib/demo/api");
+    return demoListProducts(activeOnly);
+  }
 
   let query = client().from("products").select("*").order("name", { ascending: true });
   if (activeOnly) query = query.eq("is_active", true);
@@ -21,7 +23,10 @@ export async function listProducts(activeOnly = false): Promise<Product[]> {
 }
 
 export async function createProduct(input: ProductInput): Promise<Product> {
-  if (!isSupabaseConfigured) return demoCreateProduct(input);
+  if (isDemoMode) {
+    const { demoCreateProduct } = await import("@/lib/demo/api");
+    return demoCreateProduct(input);
+  }
 
   const { data, error } = await client()
     .from("products")
@@ -39,7 +44,10 @@ export async function createProduct(input: ProductInput): Promise<Product> {
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<Product> {
-  if (!isSupabaseConfigured) return demoUpdateProduct(id, input);
+  if (isDemoMode) {
+    const { demoUpdateProduct } = await import("@/lib/demo/api");
+    return demoUpdateProduct(id, input);
+  }
 
   const { data, error } = await client()
     .from("products")
@@ -58,7 +66,8 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Pr
 }
 
 export async function setProductActive(id: string, isActive: boolean): Promise<void> {
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
+    const { demoSetProductActive } = await import("@/lib/demo/api");
     demoSetProductActive(id, isActive);
     return;
   }

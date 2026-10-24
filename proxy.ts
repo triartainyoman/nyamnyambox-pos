@@ -1,8 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-import { DEMO_COOKIE } from "@/lib/demo/session";
-import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { DEMO_COOKIE } from "@/lib/demo/constants";
+import {
+  isDemoMode,
+  isSupabaseConfigured,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "@/lib/env";
 import type { Database } from "@/lib/supabase/types";
 
 const PROTECTED_PREFIXES = ["/pos", "/history", "/dashboard", "/products", "/employees"];
@@ -16,7 +21,7 @@ function isProtected(pathname: string) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
     const demoRole = request.cookies.get(DEMO_COOKIE)?.value;
 
     if (!demoRole && isProtected(pathname)) {
@@ -29,6 +34,20 @@ export async function proxy(request: NextRequest) {
     if (demoRole && pathname === "/login") {
       const url = request.nextUrl.clone();
       url.pathname = "/pos";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (!isSupabaseConfigured) {
+    // Fail safe: without Supabase (and outside explicit demo mode) there is no
+    // way to authenticate. Send protected routes to the login screen, which
+    // renders a configuration notice instead of a form.
+    if (isProtected(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
       url.search = "";
       return NextResponse.redirect(url);
     }

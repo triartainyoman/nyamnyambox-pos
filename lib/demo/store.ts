@@ -1,6 +1,7 @@
 "use client";
 
-import { DEMO_COOKIE, DEMO_EMPLOYEE_ID, DEMO_OWNER_ID, DEMO_PROFILES } from "@/lib/demo/session";
+import { DEMO_COOKIE, DEMO_EMPLOYEE_ID, DEMO_OWNER_ID } from "@/lib/demo/constants";
+import { DEMO_PROFILES } from "@/lib/demo/profiles";
 import type { Order, Product, Profile } from "@/lib/types";
 
 const DB_KEY = "nyb-demo-db-v2";

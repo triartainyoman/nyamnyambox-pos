@@ -1,5 +1,4 @@
-import { demoListProfiles, demoUpdateProfile } from "@/lib/demo/api";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 
@@ -10,7 +9,10 @@ function client() {
 }
 
 export async function listProfiles(): Promise<Profile[]> {
-  if (!isSupabaseConfigured) return demoListProfiles();
+  if (isDemoMode) {
+    const { demoListProfiles } = await import("@/lib/demo/api");
+    return demoListProfiles();
+  }
 
   const { data, error } = await client()
     .from("profiles")
@@ -25,7 +27,10 @@ export async function updateProfile(
   id: string,
   patch: Partial<Pick<Profile, "name" | "role" | "is_active">>,
 ): Promise<Profile> {
-  if (!isSupabaseConfigured) return demoUpdateProfile(id, patch);
+  if (isDemoMode) {
+    const { demoUpdateProfile } = await import("@/lib/demo/api");
+    return demoUpdateProfile(id, patch);
+  }
 
   const { data, error } = await client()
     .from("profiles")

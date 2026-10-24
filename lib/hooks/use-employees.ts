@@ -3,9 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createEmployeeAction } from "@/app/actions/employees";
-import { demoCreateEmployee } from "@/lib/demo/api";
 import { listProfiles, updateProfile } from "@/lib/data/profiles";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import type { Profile } from "@/lib/types";
 
 export function useEmployees() {
@@ -40,7 +39,8 @@ export function useCreateEmployee() {
       email: string;
       password: string;
     }) => {
-      if (!isSupabaseConfigured) {
+      if (isDemoMode) {
+        const { demoCreateEmployee } = await import("@/lib/demo/api");
         return demoCreateEmployee({
           name: input.name,
           username: input.username,

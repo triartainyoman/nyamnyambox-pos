@@ -76,9 +76,10 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 
 ## Quick start (Demo Mode)
 
-Demo Mode lets you explore the entire app **without a Supabase project**. It activates automatically when Supabase environment variables are missing.
+Demo Mode lets you explore the entire app **without a Supabase project**. It is opt-in and only runs outside production builds.
 
 ```bash
+cp .env.example .env.local   # includes NEXT_PUBLIC_DEMO_MODE=true
 npm install
 npm run dev
 ```
@@ -91,11 +92,15 @@ Open [http://localhost:3000](http://localhost:3000). You can use the one-click *
 | Kasir | `sari` (username) | `demo123` |
 | Owner | `owner@nyamnyambox.demo` (email) | `demo123` |
 
+- Demo mode requires `NEXT_PUBLIC_DEMO_MODE=true`.
+- It is **ignored when Supabase is configured** and **hard-disabled in production builds**.
 - Demo data lives in `localStorage` under `nyb-demo-db-v2` (seed orders, products, employees).
 - The cart persists under `nyb-cart-v1`.
-- Demo role cookie: `nyb_demo_role`.
+- Demo role cookie: `nyb_demo_role` (unsigned, local-only).
 - To reset demo data: open DevTools → Application → Local Storage → delete both keys, then reload.
 - Demo data is per browser/device and is **not** shared between users.
+
+> **Production safety:** if Supabase env vars are missing in a production build, the app shows a configuration notice and does **not** offer demo login or accept the demo cookie. This prevents a misconfigured deployment from becoming an unauthenticated demo.
 
 > Demo Mode is for evaluation only. Cashier accounts created in Demo Mode are data-only and cannot sign in; use the seeded accounts above. Employee account creation and multi-device data require Supabase.
 
@@ -139,8 +144,11 @@ Fill in:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | Yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API | Yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API (secret) | Employee creation + cashier username login |
+| `NEXT_PUBLIC_DEMO_MODE` | Local `.env.local` only | No — set `true` for local demo mode |
 
 > Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser or commit it. It is only used inside server actions (`app/actions/employees.ts` and `app/actions/auth.ts`).
+
+> `NEXT_PUBLIC_DEMO_MODE` never enables demo mode in a production build. Production requires the Supabase URL and anon key; without them the login screen shows a configuration notice.
 
 Restart the dev server after changing `.env.local`.
 

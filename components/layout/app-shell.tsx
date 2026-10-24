@@ -15,7 +15,7 @@ import { Brand } from "@/components/brand";
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
 import { ROLE_LABELS, isOwnerRole } from "@/lib/constants";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import type { Profile } from "@/lib/types";
 import { cn, initials } from "@/lib/utils";
 
@@ -69,7 +69,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
           })}
         </nav>
 
-        {!isSupabaseConfigured && (
+        {isDemoMode && (
           <div className="mx-3 mb-3 rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-800">
             <span className="font-bold">Mode demo</span> — data disimpan di browser ini.
           </div>
@@ -95,7 +95,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-background/85 px-4 backdrop-blur-md md:hidden">
           <Brand compact />
           <div className="flex items-center gap-2">
-            {!isSupabaseConfigured && (
+            {isDemoMode && (
               <Badge variant="warning" className="text-[10px]">
                 Demo
               </Badge>

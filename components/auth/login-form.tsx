@@ -17,9 +17,15 @@ import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_COOKIE, DEMO_PASSWORD } from "@/lib/demo/session";
+import { DEMO_COOKIE } from "@/lib/demo/constants";
 
-export function LoginForm({ demoMode }: { demoMode: boolean }) {
+export function LoginForm({
+  demoMode,
+  demoPassword,
+}: {
+  demoMode: boolean;
+  demoPassword?: string;
+}) {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -112,16 +118,18 @@ export function LoginForm({ demoMode }: { demoMode: boolean }) {
               <ShieldCheck className="size-4" /> Kasir
             </Button>
           </div>
-          <div className="rounded-xl bg-stone-100 p-2.5 text-[10px] leading-relaxed text-stone-600">
-            <p className="font-semibold text-stone-700">Akun demo</p>
-            <p>
-              Kasir: <span className="font-semibold">rizky</span> / {DEMO_PASSWORD}
-            </p>
-            <p>
-              Owner: <span className="font-semibold">owner@nyamnyambox.demo</span> /{" "}
-              {DEMO_PASSWORD}
-            </p>
-          </div>
+          {demoPassword ? (
+            <div className="rounded-xl bg-stone-100 p-2.5 text-[10px] leading-relaxed text-stone-600">
+              <p className="font-semibold text-stone-700">Akun demo</p>
+              <p>
+                Kasir: <span className="font-semibold">rizky</span> / {demoPassword}
+              </p>
+              <p>
+                Owner: <span className="font-semibold">owner@nyamnyambox.demo</span> /{" "}
+                {demoPassword}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

@@ -1,13 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { LogOut, Loader2 } from "lucide-react";
 
 import { logoutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
-import { DEMO_COOKIE } from "@/lib/demo/session";
-import { isSupabaseConfigured } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 export function LogoutButton({
@@ -20,14 +17,8 @@ export function LogoutButton({
   showLabel?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
 
   function handleLogout() {
-    if (!isSupabaseConfigured) {
-      document.cookie = `${DEMO_COOKIE}=; path=/; max-age=0; samesite=lax`;
-      router.push("/login");
-      return;
-    }
     startTransition(async () => {
       await logoutAction();
     });

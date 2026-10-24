@@ -1,5 +1,4 @@
-import { demoCreateOrder, demoListOrders, demoUpdateOrder } from "@/lib/demo/api";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
   CreateOrderInput,
@@ -35,7 +34,10 @@ function mapOrder(row: OrderQueryRow): Order {
 }
 
 export async function listOrders(fromISO: string, toISO: string): Promise<Order[]> {
-  if (!isSupabaseConfigured) return demoListOrders(fromISO, toISO);
+  if (isDemoMode) {
+    const { demoListOrders } = await import("@/lib/demo/api");
+    return demoListOrders(fromISO, toISO);
+  }
 
   const { data, error } = await client()
     .from("orders")
@@ -49,7 +51,8 @@ export async function listOrders(fromISO: string, toISO: string): Promise<Order[
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
-  if (!isSupabaseConfigured) {
+  if (isDemoMode) {
+    const { demoListOrders } = await import("@/lib/demo/api");
     const order = demoListOrders("1970-01-01T00:00:00.000Z", "2999-01-01T00:00:00.000Z").find(
       (candidate) => candidate.id === orderId,
     );
@@ -67,7 +70,10 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
-  if (!isSupabaseConfigured) return demoCreateOrder(input);
+  if (isDemoMode) {
+    const { demoCreateOrder } = await import("@/lib/demo/api");
+    return demoCreateOrder(input);
+  }
 
   const { data, error } = await client().rpc("create_order", {
     p_channel: input.channel,
@@ -88,7 +94,10 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
 }
 
 export async function updateOrder(input: UpdateOrderInput): Promise<Order> {
-  if (!isSupabaseConfigured) return demoUpdateOrder(input);
+  if (isDemoMode) {
+    const { demoUpdateOrder } = await import("@/lib/demo/api");
+    return demoUpdateOrder(input);
+  }
 
   const { data, error } = await client().rpc("update_order", {
     p_order_id: input.order_id,

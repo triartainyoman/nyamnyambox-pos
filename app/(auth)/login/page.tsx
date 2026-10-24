@@ -1,10 +1,17 @@
 import { redirect } from "next/navigation";
-import { Flame, ReceiptText, TrendingUp, UtensilsCrossed } from "lucide-react";
+import {
+  AlertTriangle,
+  Flame,
+  ReceiptText,
+  TrendingUp,
+  UtensilsCrossed,
+} from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { Brand } from "@/components/brand";
 import { getCurrentProfile } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/env";
+import { DEMO_PASSWORD } from "@/lib/demo/session";
+import { isAuthConfigured, isDemoMode } from "@/lib/env";
 
 const HIGHLIGHTS = [
   { icon: ReceiptText, title: "Checkout kilat", text: "Kanal, pembayaran, dan nota dalam satu layar." },
@@ -80,7 +87,31 @@ export default async function LoginPage({
           </div>
 
           <div className="rounded-3xl border border-border bg-card p-5 shadow-xl shadow-orange-900/5">
-            <LoginForm demoMode={!isSupabaseConfigured} />
+            {isAuthConfigured ? (
+              <LoginForm
+                demoMode={isDemoMode}
+                demoPassword={isDemoMode ? DEMO_PASSWORD : undefined}
+              />
+            ) : (
+              <div className="space-y-3 py-2 text-center">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
+                  <AlertTriangle className="size-6" />
+                </div>
+                <h3 className="text-base font-bold">Konfigurasi belum lengkap</h3>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Server belum terhubung ke database. Hubungi admin toko untuk menyelesaikan
+                  konfigurasi sebelum aplikasi digunakan.
+                </p>
+                {process.env.NODE_ENV !== "production" ? (
+                  <p className="rounded-xl bg-stone-100 px-3 py-2 text-[10px] leading-relaxed text-stone-600">
+                    Mode pengembangan: isi <code className="font-semibold">.env.local</code> dengan
+                    kredensial Supabase, atau set{" "}
+                    <code className="font-semibold">NEXT_PUBLIC_DEMO_MODE=true</code> untuk mencoba
+                    mode demo lokal.
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {next ? (
@@ -89,9 +120,11 @@ export default async function LoginPage({
             </p>
           ) : null}
 
-          <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
-            Kasir masuk dengan username, Owner dengan email. Hubungi admin jika lupa password.
-          </p>
+          {isAuthConfigured ? (
+            <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Kasir masuk dengan username, Owner dengan email. Hubungi admin jika lupa password.
+            </p>
+          ) : null}
         </div>
       </section>
     </div>

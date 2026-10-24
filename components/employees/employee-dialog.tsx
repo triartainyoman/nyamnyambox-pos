@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateEmployee } from "@/lib/hooks/use-employees";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
 import { normalizeUsername, USERNAME_HINT, validateUsername } from "@/lib/username";
 
 export function EmployeeDialog({
@@ -151,7 +151,7 @@ export function EmployeeDialog({
               />
             </div>
 
-            {!isSupabaseConfigured && (
+            {isDemoMode && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
                 Mode demo: akun hanya ditambahkan ke data lokal browser dan belum bisa dipakai
                 login. Gunakan akun demo rizky / sari untuk mencoba login kasir.
