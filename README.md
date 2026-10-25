@@ -300,6 +300,7 @@ npm run start   # run the production build
 npm run lint    # ESLint
 npm test        # unit tests (Vitest)
 npm run test:watch # unit tests in watch mode
+npm run test:e2e # E2E smoke tests (Playwright, demo mode)
 npm run test:rls # RLS/RPC regression test (PGlite)
 ```
 
@@ -319,6 +320,18 @@ Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
 
 The suite runs in CI on every push to `main` and every pull request via
 `.github/workflows/unit-tests.yml`.
+
+### E2E smoke test
+
+`npm run test:e2e` runs Playwright against a dedicated `next dev` server in **demo mode** (`http://127.0.0.1:3210`). Supabase env vars are blanked for the test server, so the suite never touches production data.
+
+Covered flows:
+
+- cashier: login → add menu + notes → checkout (Takeaway/QRIS/phone) → receipt → edit the order in history → `Diedit` badge;
+- owner: email login → dashboard → add a menu → add a cashier;
+- negative: owner username login rejected; cashier redirected from owner pages; protected routes redirect to `/login` without a session.
+
+First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/e2e.yml` and uploads traces/screenshots on failure.
 
 ### RLS/RPC regression test
 
@@ -385,7 +398,9 @@ supabase/
   verify.sql               # production schema verification queries
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 tests/unit/                # Vitest unit tests
+e2e/                       # Playwright smoke tests (demo mode)
 vitest.config.mts          # Vitest config (alias @, node/jsdom environments)
+playwright.config.ts       # Playwright config + demo-mode web server
 proxy.ts                   # Next.js 16 auth middleware
 ```
 

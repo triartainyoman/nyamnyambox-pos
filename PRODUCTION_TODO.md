@@ -207,8 +207,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Workflow minimal `.github/workflows/unit-tests.yml` menjalankan `npm ci` + `npm test` pada push ke `main` dan pull request. Pipeline lengkap (typecheck/lint/build/E2E) tetap menjadi lingkup T11.
 - `npm test` ✅ (109/109), `npx tsc --noEmit` ✅, `npm run lint` ✅, `npm run build` ✅.
 
-### [ ] T10 — E2E smoke test (Playwright)
-**Prioritas:** P1 · **Butuh user:** tidak
+### [x] T10 — E2E smoke test (Playwright)
+**Prioritas:** P1 · **Butuh user:** tidak · **Selesai:** 2026-10-25
 
 - Skenario demo mode: login kasir → tambah menu → checkout → struk → edit order di history.
 - Skenario owner: login email → dashboard tampil → tambah produk → tambah kasir.
@@ -216,6 +216,16 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Jalankan headless di CI.
 
 **Selesai jika:** suite E2E stabil dan menjadi gate rilis.
+
+**Hasil verifikasi:**
+- `@playwright/test` + Chromium ditambahkan; `npm run test:e2e` dan `npm run test:e2e:ui` tersedia.
+- `playwright.config.ts` menjalankan dev server khusus di `127.0.0.1:3210` dengan Supabase env dikosongkan, `NEXT_PUBLIC_DEMO_MODE=true`, dan `NEXT_DIST_DIR=.next-e2e` supaya bisa berjalan berdampingan dengan `npm run dev` biasa. Demo mode tetap hard-disabled di production build.
+- 5 skenario di `e2e/`:
+  - kasir mobile 390px: login username → tambah Thai Basil Chicken → catatan "Pedas" → checkout Takeaway/QRIS + nomor WA → nota tampil → buka riwayat → edit catatan/status/phone → nota menampilkan `* Transaksi telah diedit` dan kartu riwayat menampilkan badge `Diedit`;
+  - owner: login email → dashboard → tambah menu `E2E Es Kopi` → tambah kasir `e2ebarista`;
+  - negatif: username Owner ditolak; kasir dialihkan dari `/dashboard`, `/products`, `/employees` ke `/pos`; `/pos` tanpa sesi diarahkan ke `/login`.
+- Workflow `.github/workflows/e2e.yml`: `npm ci` → `npx playwright install --with-deps chromium` → `npm run test:e2e`, upload report/trace saat gagal. Branch protection tetap menjadi bagian T11.
+- `npx playwright test --repeat-each=2` ✅ (10/10), `npm test` ✅ (109/109), `npx tsc --noEmit` ✅, `npm run lint` ✅, `npm run build` ✅.
 
 ### [ ] T11 — CI GitHub Actions
 **Prioritas:** P1 · **Butuh user:** tidak

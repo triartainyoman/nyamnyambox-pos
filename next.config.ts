@@ -27,6 +27,9 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
+  // Tests run their own dev server next to a developer's server. A separate
+  // dist dir keeps the Next dev lock from colliding.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // The app is fully dynamic (auth + live order data), so we opt out of
   // Cache Components and use the classic dynamic rendering model.
   cacheComponents: false,
