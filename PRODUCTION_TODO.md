@@ -226,6 +226,7 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
   - negatif: username Owner ditolak; kasir dialihkan dari `/dashboard`, `/products`, `/employees` ke `/pos`; `/pos` tanpa sesi diarahkan ke `/login`.
 - Workflow `.github/workflows/e2e.yml`: `npm ci` → `npx playwright install --with-deps chromium` → `npm run test:e2e`, upload report/trace saat gagal. Branch protection tetap menjadi bagian T11.
 - `npx playwright test --repeat-each=2` ✅ (10/10), `npm test` ✅ (109/109), `npx tsc --noEmit` ✅, `npm run lint` ✅, `npm run build` ✅.
+- Perbaikan blocking dev server: `@tailwindcss/turbopack` (4.3.3) mengekspos `exports` map yang menyembunyikan `dist/index.js`, sehingga loader Turbopack gagal (`Cannot find module .../@tailwindcss/turbopack/dist/index.js`) dan semua halaman dev jadi 500. Aturan `turbopack.rules` di `next.config.ts` dihapus dan Tailwind v4 sekarang dikompilasi lewat `postcss.config.mjs` (`@tailwindcss/postcss`) sesuai dokumentasi Next 16. Dev (`/login` 200 + utility CSS ter-generate), build produksi, dan E2E tetap berjalan.
 
 ### [ ] T11 — CI GitHub Actions
 **Prioritas:** P1 · **Butuh user:** tidak
