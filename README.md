@@ -298,10 +298,12 @@ npm run dev     # start development server
 npm run build   # production build
 npm run start   # run the production build
 npm run lint    # ESLint
+npm run typecheck # TypeScript, no emit
 npm test        # unit tests (Vitest)
 npm run test:watch # unit tests in watch mode
 npm run test:e2e # E2E smoke tests (Playwright, demo mode)
 npm run test:rls # RLS/RPC regression test (PGlite)
+npm run ci      # typecheck + lint + unit tests + build (what CI runs first)
 ```
 
 Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
@@ -319,7 +321,7 @@ Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
 - role landing paths and channel/payment labels.
 
 The suite runs in CI on every push to `main` and every pull request via
-`.github/workflows/unit-tests.yml`.
+`.github/workflows/ci.yml`.
 
 ### E2E smoke test
 
@@ -331,7 +333,27 @@ Covered flows:
 - owner: email login → dashboard → add a menu → add a cashier;
 - negative: owner username login rejected; cashier redirected from owner pages; protected routes redirect to `/login` without a session.
 
-First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/e2e.yml` and uploads traces/screenshots on failure.
+First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/ci.yml` and uploads traces/screenshots on failure.
+
+### CI and branch protection
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request. A new push to the same branch cancels the previous run.
+
+| Job | Runs | Checks |
+| --- | --- | --- |
+| `Typecheck, lint, unit tests` | first | `npm run typecheck`, `npm run lint`, `npm test` |
+| `Production build` | after the first job | `npm run build` with Supabase env blanked, so the fail-safe path is covered |
+| `E2E (demo mode)` | after the first job | `npx playwright install --with-deps chromium` + `npm run test:e2e` |
+
+Dependencies are cached through `actions/setup-node`; the Next.js build cache (`.next/cache`) is cached in the build job. The build and E2E jobs only start once the cheap checks pass, which keeps a red run short.
+
+To make these checks required on `main`, run once with a token that can administer the repo:
+
+```bash
+GITHUB_TOKEN=... node scripts/setup-branch-protection.mjs --require-pr
+```
+
+`--require-pr` also forces changes to land through a pull request (no approvals needed, so a solo owner can still merge). Use `--dry-run` to inspect the payload first. Without `--require-pr`, direct pushes stay allowed and the checks are advisory.
 
 ### RLS/RPC regression test
 
