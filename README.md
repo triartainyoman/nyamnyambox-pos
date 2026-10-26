@@ -347,13 +347,24 @@ First-time setup: `npx playwright install chromium`. The E2E server uses `.next-
 
 Dependencies are cached through `actions/setup-node`; the Next.js build cache (`.next/cache`) is cached in the build job. The build and E2E jobs only start once the cheap checks pass, which keeps a red run short.
 
-To make these checks required on `main`, run once with a token that can administer the repo:
+These checks are **required on `main`** and the branch is protected: direct pushes are rejected, and every change must land through a pull request whose checks are green (no approvals needed, so a solo owner can still merge). Force-pushes and deleting `main` are blocked.
+
+The protection was applied with `scripts/setup-branch-protection.mjs`; run it again only if the CI job names change:
 
 ```bash
 GITHUB_TOKEN=... node scripts/setup-branch-protection.mjs --require-pr
 ```
 
-`--require-pr` also forces changes to land through a pull request (no approvals needed, so a solo owner can still merge). Use `--dry-run` to inspect the payload first. Without `--require-pr`, direct pushes stay allowed and the checks are advisory.
+Use `--dry-run` to inspect the payload first, or omit `--require-pr` to keep direct pushes allowed with advisory checks.
+
+Daily flow:
+
+```bash
+git checkout -b feat/my-change
+npm run ci        # typecheck + lint + unit tests + build
+git push -u origin feat/my-change
+# open a PR, wait for CI, merge
+```
 
 ### RLS/RPC regression test
 

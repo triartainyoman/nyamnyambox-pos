@@ -228,8 +228,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - `npx playwright test --repeat-each=2` ✅ (10/10), `npm test` ✅ (109/109), `npx tsc --noEmit` ✅, `npm run lint` ✅, `npm run build` ✅.
 - Perbaikan blocking dev server: `@tailwindcss/turbopack` (4.3.3) mengekspos `exports` map yang menyembunyikan `dist/index.js`, sehingga loader Turbopack gagal (`Cannot find module .../@tailwindcss/turbopack/dist/index.js`) dan semua halaman dev jadi 500. Aturan `turbopack.rules` di `next.config.ts` dihapus dan Tailwind v4 sekarang dikompilasi lewat `postcss.config.mjs` (`@tailwindcss/postcss`) sesuai dokumentasi Next 16. Dev (`/login` 200 + utility CSS ter-generate), build produksi, dan E2E tetap berjalan.
 
-### [~] T11 — CI GitHub Actions
-**Prioritas:** P1 · **Butuh user:** ya (hanya untuk branch protection) · **Mulai:** 2026-10-26
+### [x] T11 — CI GitHub Actions
+**Prioritas:** P1 · **Butuh user:** ya (hanya untuk branch protection) · **Selesai:** 2026-10-26
 
 - Workflow PR + main: install → typecheck → lint → unit test → build → E2E (demo).
 - Cache dependency; fail fast.
@@ -246,9 +246,9 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Script baru: `npm run typecheck` dan `npm run ci` (typecheck + lint + unit + build).
 - Bug CI pertama: `npm run typecheck` gagal di checkout bersih karena `LayoutProps` adalah tipe global yang baru dibuat oleh `next dev`/`next build`. Perbaikannya `typecheck` sekarang menjalankan `next typegen` lebih dulu (`next typegen && tsc --noEmit`) sesuai dokumentasi Next 16; sudah diuji dari `.next` kosong.
 - Run CI pertama (`fa721e4`) merah karena bug di atas, run `f1848f3` hijau: quality 31 dtk, build 39 dtk, E2E 62 dtk (build & E2E paralel). Repo ternyata **public**, jadi status Actions bisa dipantau tanpa token lewat REST API; workflow lama pada `d82d9eb` juga hijau.
-- Branch protection: `scripts/setup-branch-protection.mjs` menyiapkan required status checks (`strict: true`, tiga nama job di atas), `enforce_admins`, larangan force-push/hapus branch, dan opsi `--require-pr`. `--dry-run` sudah diuji; penerapan butuh token admin repo sehingga **belum dijalankan**.
-
-**Sisa:** jalankan `GITHUB_TOKEN=... node scripts/setup-branch-protection.mjs --require-pr` (atau atur manual di Settings → Branches) agar check menjadi wajib dan merge diblokir saat gagal. Setelah itu T11 bisa ditandai selesai.
+- Branch protection: `scripts/setup-branch-protection.mjs` menyiapkan required status checks (`strict: true`, tiga nama job di atas), `enforce_admins`, larangan force-push/hapus branch, dan opsi `--require-pr`. `--dry-run` sudah diuji.
+- Branch protection **sudah aktif** di `main` (diverifikasi lewat `GET /branches/main/protection`): required checks ketiga job + `strict: true`, PR wajib sebelum merge (0 approval), `enforce_admins: true`, force-push dan delete branch diblokir.
+- Alur kerja baru: **push langsung ke `main` ditolak**. Setiap perubahan lewat branch → PR → check hijau → merge. `npm run ci` dijalankan lokal sebelum push untuk menangkap error lebih cepat.
 
 ### [ ] T12 — Manual QA matrix
 **Prioritas:** P1 · **Butuh user:** ya (verifikasi perangkat)
