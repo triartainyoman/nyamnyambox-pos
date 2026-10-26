@@ -298,7 +298,7 @@ npm run dev     # start development server
 npm run build   # production build
 npm run start   # run the production build
 npm run lint    # ESLint
-npm run typecheck # TypeScript, no emit
+npm run typecheck # generate route types + TypeScript, no emit
 npm test        # unit tests (Vitest)
 npm run test:watch # unit tests in watch mode
 npm run test:e2e # E2E smoke tests (Playwright, demo mode)
