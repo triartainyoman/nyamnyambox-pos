@@ -9,6 +9,7 @@ import {
   SUPABASE_ANON_KEY,
   SUPABASE_URL,
 } from "@/lib/env";
+import { buildCsp, createNonce } from "@/lib/security";
 import type { Database } from "@/lib/supabase/types";
 import type { UserRole } from "@/lib/types";
 
@@ -23,24 +24,52 @@ function isProtected(pathname: string) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // A fresh nonce per document. Next.js picks it up from the request CSP header
+  // and attaches it to its own script tags.
+  const nonce = createNonce();
+  const csp = buildCsp({
+    nonce,
+    dev: process.env.NODE_ENV !== "production",
+    supabaseUrl: SUPABASE_URL,
+    secure: request.nextUrl.protocol === "https:",
+  });
+
+  const withCsp = (response: NextResponse) => {
+    response.headers.set("Content-Security-Policy", csp);
+    return response;
+  };
+
+  // Rebuilt on demand so cookies refreshed by Supabase are forwarded to the
+  // render. `request.cookies.set` rewrites the request's `cookie` header.
+  const next = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set("Content-Security-Policy", csp);
+    return withCsp(NextResponse.next({ request: { headers } }));
+  };
+
+  const redirectTo = (target: string, params?: Record<string, string>) => {
+    const url = request.nextUrl.clone();
+    url.pathname = target;
+    url.search = "";
+    for (const [key, value] of Object.entries(params ?? {})) {
+      url.searchParams.set(key, value);
+    }
+    return withCsp(NextResponse.redirect(url));
+  };
+
   if (isDemoMode) {
     const demoRole = request.cookies.get(DEMO_COOKIE)?.value;
 
     if (!demoRole && isProtected(pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.search = "";
-      return NextResponse.redirect(url);
+      return redirectTo("/login");
     }
 
     if (demoRole && pathname === "/login") {
-      const url = request.nextUrl.clone();
-      url.pathname = homePathForRole(demoRole as UserRole);
-      url.search = "";
-      return NextResponse.redirect(url);
+      return redirectTo(homePathForRole(demoRole as UserRole));
     }
 
-    return NextResponse.next();
+    return next();
   }
 
   if (!isSupabaseConfigured) {
@@ -48,16 +77,13 @@ export async function proxy(request: NextRequest) {
     // way to authenticate. Send protected routes to the login screen, which
     // renders a configuration notice instead of a form.
     if (isProtected(pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.search = "";
-      return NextResponse.redirect(url);
+      return redirectTo("/login");
     }
 
-    return NextResponse.next();
+    return next();
   }
 
-  let response = NextResponse.next({ request });
+  let response = next();
 
   const supabase = createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
@@ -66,7 +92,7 @@ export async function proxy(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = next();
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -79,11 +105,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user && isProtected(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    if (pathname !== "/pos") url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    return redirectTo("/login", pathname !== "/pos" ? { next: pathname } : undefined);
   }
 
   return response;

@@ -272,8 +272,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 
 ## Fase 3 — Operability & keamanan
 
-### [ ] T13 — Security headers & rate limit login
-**Prioritas:** P1 · **Butuh user:** tidak
+### [x] T13 — Security headers & rate limit login
+**Prioritas:** P1 · **Butuh user:** tidak · **Selesai:** 2026-10-27
 
 - Header: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`/`frame-ancestors`, CSP yang kompatibel dengan Next.js.
 - Throttle login per IP/identifier (in-memory atau Upstash) + pesan generik.
@@ -281,6 +281,14 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Pastikan tidak ada secret/log sensitif.
 
 **Selesai jika:** header terverifikasi di response production dan brute force login terbatas.
+
+**Hasil:**
+- `lib/security.ts` + `next.config.ts`: HSTS (`max-age=63072000; includeSubDomains; preload`), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, dan `Permissions-Policy` (camera/mic/geolocation/payment/usb dimatikan) terpasang di **semua** response, termasuk redirect middleware.
+- CSP per request dengan nonce di `proxy.ts`: production memakai `script-src 'self' 'nonce-…' 'strict-dynamic'` (16/16 script tag di HTML production lokal membawa nonce yang sama dengan header), `style-src` tetap `'unsafe-inline'` karena Radix/Recharts memakai style attribute, `connect-src` dibatasi ke origin app + Supabase REST/realtime, `frame-ancestors 'none'`, `object-src 'none'`, `form-action 'self'`. `upgrade-insecure-requests` hanya dikirim saat dokumen HTTPS. Dev memakai policy longgar agar HMR Turbopack tetap jalan.
+- `lib/rate-limit.ts`: maksimum **5 kegagalan per identifier** dan **20 per IP** dalam window 15 menit; login sukses mereset counter; pesan `Terlalu banyak percobaan masuk. Coba lagi dalam N menit.` dan tidak menyebut apakah akun ada. Kegagalan infrastruktur (Supabase down) tidak dihitung agar tidak mengunci pengguna. Batasan: counter in-memory per instance serverless (didokumentasikan di README).
+- Verifikasi: `curl` header di dev + production build lokal; Playwright memuat `/login`, dashboard, products, employees, history, POS serta dialog Radix di bawah CSP ketat **tanpa error console**; 3 skenario E2E baru (`e2e/security.spec.ts`) dan 21 unit test (`rate-limit`, `security`).
+- `npm audit`: **0 kerentanan** (info/low/moderate/high/critical). Tidak ada `console.log` yang mencetak token/password; service-role key hanya dipakai di server.
+- Sisa verifikasi setelah deploy: `curl` URL production untuk memastikan header ikut terkirim di Vercel.
 
 ### [ ] T14 — Observability & backup runbook
 **Prioritas:** P1 · **Butuh user:** ya (opsional: akun Sentry)
