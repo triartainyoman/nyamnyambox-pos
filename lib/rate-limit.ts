@@ -1,5 +1,5 @@
 /**
- * In-memory login throttling.
+ * In-memory throttling (login failures and client error reports).
  *
  * Failed logins are counted per client IP and per identifier in a fixed
  * 15-minute window. A successful login clears both counters.
@@ -16,6 +16,9 @@ export const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 export const LOGIN_IDENTIFIER_LIMIT = 5;
 /** Wrong passwords allowed per IP. Higher because a shop can share one NAT IP. */
 export const LOGIN_IP_LIMIT = 20;
+/** Client error reports accepted per IP inside one window. */
+export const CLIENT_ERROR_LIMIT = 30;
+export const CLIENT_ERROR_WINDOW_MS = 10 * 60 * 1000;
 
 /** Keeps the map from growing without bound on a long-lived instance. */
 const MAX_BUCKETS = 5000;
@@ -44,6 +47,11 @@ export function loginRateLimitRules(ip: string, identifier: string): RateLimitRu
   ];
 }
 
+/** Bucket for `POST /api/log-error`, kept separate from login counters. */
+export function clientErrorRateLimitRules(ip: string): RateLimitRule[] {
+  return [{ key: `client-error:${ip}`, max: CLIENT_ERROR_LIMIT }];
+}
+
 export function checkRateLimit(
   rules: RateLimitRule[],
   now = Date.now(),
@@ -68,11 +76,15 @@ export function checkRateLimit(
   return { limited: retryAfterSeconds > 0, retryAfterSeconds };
 }
 
-export function recordRateLimitFailure(rules: RateLimitRule[], now = Date.now()) {
+export function recordRateLimitFailure(
+  rules: RateLimitRule[],
+  now = Date.now(),
+  windowMs = LOGIN_WINDOW_MS,
+) {
   for (const rule of rules) {
     const bucket = buckets.get(rule.key);
     if (!bucket || bucket.resetAt <= now) {
-      buckets.set(rule.key, { failures: 1, resetAt: now + LOGIN_WINDOW_MS });
+      buckets.set(rule.key, { failures: 1, resetAt: now + windowMs });
       continue;
     }
     bucket.failures += 1;

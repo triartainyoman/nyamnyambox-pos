@@ -297,6 +297,19 @@ curl -sD - -o /dev/null https://nyamnyambox-pos.vercel.app/login | grep -iE "con
 
 ---
 
+## Observability & operations
+
+- **Structured logs.** `lib/logging.ts` writes one JSON line per event (`app.start`, `request.error`, `client.error`). `instrumentation.ts` hooks Next.js `onRequestError`, so uncaught server errors are logged with route, method and router context. Browser errors (React boundaries, `window.onerror`, unhandled rejections) are POSTed to `/api/log-error` by `lib/client-logging.ts`.
+- **PII redaction.** `lib/redact.ts` blanks sensitive field names and scrubs e-mails, Indonesian phone numbers, JWTs, bearer tokens, Supabase keys and database URLs — on the client before sending, and again on the server before writing. IPs are logged as a 6-byte hash only.
+- **Health check.** `GET /api/health` returns `200` when the app and Supabase (PostgREST + Auth) are reachable and `503` when a dependency is down or production is missing its Supabase env. It bypasses the Proxy, so it is fast and needs no session.
+- **Uptime.** `.github/workflows/uptime.yml` pings `/api/health` every 30 minutes; a failed run e-mails the repository owner.
+- **Backups.** `.github/workflows/backup.yml` runs a weekly `pg_dump` of the `public` schema to a 90-day GitHub artifact (the Supabase free plan has no automatic backups). `npm run drill:restore` restores a dump into a throwaway Postgres and runs `supabase/verify.sql` against it.
+- **Bookkeeping export.** `npm run export:orders -- --month 2026-10` writes a CSV of transactions (Asia/Jakarta timestamps, human-readable labels, no customer phone numbers).
+
+Full procedures — where to find logs, how to run a restore drill against a staging project, incident checklists — live in [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
+
+---
+
 ## Error handling
 
 - `lib/errors.ts` is the single place that turns Supabase/PostgREST/network failures into short Indonesian messages. Internal details (table names, constraints, SQL, stack traces) never reach the UI.
@@ -319,6 +332,8 @@ npm run test:watch # unit tests in watch mode
 npm run test:e2e # E2E smoke tests (Playwright, demo mode)
 npm run test:rls # RLS/RPC regression test (PGlite)
 npm run qa:check # automated QA matrix (needs the demo server on :3210)
+npm run drill:restore -- --from-db "$SUPABASE_DB_URL" # restore a dump into a scratch DB
+npm run export:orders -- --month 2026-10 # bookkeeping CSV export
 npm run ci      # typecheck + lint + unit tests + build (what CI runs first)
 ```
 
@@ -442,8 +457,12 @@ lib/
   username.ts              # username normalization + validation rules
   whatsapp.ts              # receipt message + wa.me URL builder
   security.ts              # security headers + CSP builder
-  rate-limit.ts            # in-memory login throttling
+  rate-limit.ts            # in-memory login + client-error throttling
+  logging.ts               # structured JSON logging
+  redact.ts                # PII redaction for logs
+  client-logging.ts        # browser error reporter
 stores/useCartStore.ts     # persisted cart
+instrumentation.ts         # startup log + onRequestError hook
 supabase/
   migrations/0001_init.sql # schema, RLS, RPCs, seed
   migrations/0002_username_login.sql # username column, backfill, trigger
@@ -454,7 +473,13 @@ supabase/
   verify.sql               # production schema verification queries
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 scripts/qa-check.mjs       # automated QA matrix (screenshots -> qa-artifacts/)
+scripts/restore-drill.mjs  # restore a dump into PGlite + run verify.sql
+scripts/export-orders.mjs  # bookkeeping CSV export
+scripts/lib/csv.mjs        # CSV formatting helpers
+app/api/health/            # liveness + Supabase health for uptime monitors
+app/api/log-error/         # client error sink
 docs/QA_MATRIX.md          # QA checklist: automated results + manual device items
+docs/RUNBOOK.md            # logging, uptime, backup/restore, bookkeeping export
 tests/unit/                # Vitest unit tests
 e2e/                       # Playwright smoke tests (demo mode)
 vitest.config.mts          # Vitest config (alias @, node/jsdom environments)
@@ -471,3 +496,4 @@ proxy.ts                   # Next.js 16 auth middleware
 - Demo Mode is single-browser and not suitable for real operations.
 - Customer WhatsApp delivery is a `wa.me` deep link, not an automated messaging API.
 - Login throttling is in-memory per serverless instance; a distributed brute force across many instances is only slowed, not fully blocked.
+- The Supabase free plan has no automated backups or PITR; the weekly GitHub Actions dump gives a 7-day RPO. Server logs are JSON lines in Vercel with plan-dependent retention — no external log store yet (Sentry can be added without changing call sites).

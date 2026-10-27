@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { ErrorScreen } from "@/components/error-screen";
+import { reportClientError } from "@/lib/client-logging";
 
 export default function RootError({
   error,
@@ -12,7 +13,7 @@ export default function RootError({
   retry: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    reportClientError(error, "error-boundary");
   }, [error]);
 
   return <ErrorScreen error={error} retry={retry} />;

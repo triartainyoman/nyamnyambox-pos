@@ -288,10 +288,10 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - `lib/rate-limit.ts`: maksimum **5 kegagalan per identifier** dan **20 per IP** dalam window 15 menit; login sukses mereset counter; pesan `Terlalu banyak percobaan masuk. Coba lagi dalam N menit.` dan tidak menyebut apakah akun ada. Kegagalan infrastruktur (Supabase down) tidak dihitung agar tidak mengunci pengguna. Batasan: counter in-memory per instance serverless (didokumentasikan di README).
 - Verifikasi: `curl` header di dev + production build lokal; Playwright memuat `/login`, dashboard, products, employees, history, POS serta dialog Radix di bawah CSP ketat **tanpa error console**; 3 skenario E2E baru (`e2e/security.spec.ts`) dan 21 unit test (`rate-limit`, `security`).
 - `npm audit`: **0 kerentanan** (info/low/moderate/high/critical). Tidak ada `console.log` yang mencetak token/password; service-role key hanya dipakai di server.
-- Sisa verifikasi setelah deploy: `curl` URL production untuk memastikan header ikut terkirim di Vercel.
+- **Terverifikasi di production (2026-10-27, setelah merge `8d91451`):** `curl` ke `https://nyamnyambox-pos.vercel.app/login` mengembalikan HSTS `max-age=63072000; includeSubDomains; preload`, `x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy` lengkap, dan CSP dengan nonce **berbeda di setiap request**. Playwright di production: login Owner, `/dashboard`, `/pos`, `/history`, `/products`, `/employees`, plus cart sheet Radix — semua termuat tanpa satu pun error console.
 
-### [ ] T14 — Observability & backup runbook
-**Prioritas:** P1 · **Butuh user:** ya (opsional: akun Sentry)
+### [~] T14 — Observability & backup runbook
+**Prioritas:** P1 · **Butuh user:** ya (hanya untuk drill staging) · **Dikerjakan:** 2026-10-27
 
 - Logging error server + client (Sentry atau alternatif), dengan redaksi data pribadi.
 - Health check sederhana dan alert uptime.
@@ -299,6 +299,19 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Dokumentasikan ekspor data transaksi untuk pembukuan.
 
 **Selesai jika:** error terlacak, backup terjadwal, dan restore pernah diuji di project staging.
+
+**Hasil:**
+- **Log terstruktur tanpa akun pihak ketiga** (pilihan user): `lib/logging.ts` menulis satu baris JSON per event; `instrumentation.ts` memakai hook Next.js `onRequestError` untuk menangkap error Server Component/Route Handler/Server Action/Proxy beserta `path`, `method`, `routePath`, `routeType`. Error browser (error boundary React, `window.onerror`, unhandled rejection) dikirim `lib/client-logging.ts` ke `POST /api/log-error` (maks 8 KB, 30 laporan/IP/10 menit, dedupe 12/sesi).
+- **Redaksi PII** di `lib/redact.ts`, dijalankan di browser sebelum kirim dan di server sebelum tulis: email, nomor HP Indonesia (semua format), JWT, bearer token, kunci `sb_*`, connection string DB; field bernama password/token/email/phone/cookie/session/username di-`[redacted]`; IP hanya disimpan sebagai hash 6 byte; stack dipotong 2000 karakter.
+- **Health check** `GET /api/health`: `200` bila app + PostgREST + Supabase Auth terjangkau, `503` bila ada yang mati **atau** production kehilangan env Supabase. Melewati Proxy (tanpa sesi, tanpa CSP) dan `Cache-Control: no-store`.
+- **Alert uptime**: `.github/workflows/uptime.yml` memanggil endpoint tiap 30 menit; gagal → email owner repo. Batasan (auto-disable 60 hari, cron delay) didokumentasikan beserta saran monitor eksternal.
+- **Backup**: `.github/workflows/backup.yml` menjalankan `pg_dump --schema=public --format=custom` mingguan (Senin 01:00 WIB) ke artifact GitHub retensi 90 hari; skip dengan warning bila secret `SUPABASE_DB_URL` belum ada. Free plan Supabase memang tidak punya backup otomatis/PITR — dicatat di runbook beserta opsi upgrade.
+- **Restore diuji**: `scripts/restore-drill.mjs` (`npm run drill:restore`) memulihkan dump ke Postgres 17 sementara (PGlite) dengan stub role/skema `auth`, lalu menjalankan `supabase/verify.sql`. Drill 2026-10-27 memakai dump **production** (schema + data `products`): **15/16 OK, 1 dilewati** (`active owner exists`, karena dump tanpa data profil/PII). Semua tabel, enum, RLS policy, grant, RPC, `search_path`, dan view `staff_directory` pulih benar.
+- **Ekspor pembukuan**: `npm run export:orders -- --month 2026-10` (atau `--from/--to`) menghasilkan CSV dengan waktu Asia/Jakarta, label channel/metode bayar, total rupiah bilangan bulat, ringkasan item, BOM UTF-8; nomor HP pelanggan tidak diekspor. Diuji ke production: 4 transaksi, Rp151.000.
+- **Dokumentasi**: `docs/RUNBOOK.md` (format & lokasi log, redaksi, health/uptime, setup backup, drill restore, retensi, ekspor bulanan, insiden) + README bagian “Observability & operations”.
+- **Uji**: 46 unit test baru (`redact`, `logging`, `client-logging`, `export-csv`, bucket rate limit client error) dan 4 skenario E2E (`e2e/observability.spec.ts`: health 200 + no-store, health tanpa sesi, validasi `log-error`, error browser terkirim otomatis).
+
+**Sisa (butuh user):** drill restore penuh ke **project staging Supabase** (login + UI nyata) — langkah 1–6 sudah tertulis di `docs/RUNBOOK.md` §3.5 dan butuh project uji baru yang hanya bisa dibuat dari dashboard Supabase. Drill PGlite di atas sudah menutup verifikasi skema/RLS/RPC.
 
 ### [ ] T15 — Performance & aksesibilitas
 **Prioritas:** P2 · **Butuh user:** tidak

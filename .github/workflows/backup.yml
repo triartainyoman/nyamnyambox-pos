@@ -1,0 +1,76 @@
+name: Database backup
+
+# Weekly logical backup of the public schema (app tables, RLS policies, RPCs).
+#
+# The Supabase free plan has no automated backups and no PITR, so this workflow
+# is the backup. It needs one repository secret:
+#
+#   SUPABASE_DB_URL = postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+#
+# Without the secret the run is skipped with a warning instead of failing.
+# See docs/RUNBOOK.md for setup, restore and the retention caveats.
+
+on:
+  schedule:
+    # Sunday 18:00 UTC = Monday 01:00 WIB.
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    name: pg_dump public schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check configuration
+        id: config
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::warning::Secret SUPABASE_DB_URL belum diset — backup dilewati. Lihat docs/RUNBOOK.md."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install PostgreSQL 17 client
+        if: steps.config.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          codename="$(lsb_release -cs)"
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${codename}-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Dump
+        id: dump
+        if: steps.config.outputs.skip == 'false'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          file="nyb-public-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          # --schema=public keeps Supabase-managed schemas (auth, storage) out;
+          # users are re-created by Supabase, not restored from this file.
+          pg_dump "$DB_URL" --schema=public --no-owner --format=custom --file "$file"
+          ls -lh "$file"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backup artifact
+        if: steps.config.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nyb-backup-${{ github.run_id }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 90
+          if-no-files-found: error

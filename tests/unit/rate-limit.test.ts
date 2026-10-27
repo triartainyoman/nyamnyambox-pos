@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  CLIENT_ERROR_LIMIT,
+  CLIENT_ERROR_WINDOW_MS,
   LOGIN_IDENTIFIER_LIMIT,
   LOGIN_WINDOW_MS,
   checkRateLimit,
   clearRateLimit,
+  clientErrorRateLimitRules,
   clientIpFromHeaders,
   loginRateLimitRules,
   rateLimitMessage,
@@ -90,6 +93,42 @@ describe("login rate limit", () => {
     expect(rateLimitMessage(15 * 60)).toBe(
       "Terlalu banyak percobaan masuk. Coba lagi dalam 15 menit.",
     );
+  });
+});
+
+describe("client error rate limit", () => {
+  beforeEach(() => resetRateLimitsForTests());
+
+  it("allows reports below the limit", () => {
+    for (let i = 0; i < CLIENT_ERROR_LIMIT - 1; i += 1) {
+      recordRateLimitFailure(clientErrorRateLimitRules("203.0.113.7"), T0 + i, CLIENT_ERROR_WINDOW_MS);
+    }
+    expect(checkRateLimit(clientErrorRateLimitRules("203.0.113.7"), T0).limited).toBe(false);
+  });
+
+  it("blocks after the limit is reached", () => {
+    for (let i = 0; i < CLIENT_ERROR_LIMIT; i += 1) {
+      recordRateLimitFailure(clientErrorRateLimitRules("203.0.113.7"), T0 + i, CLIENT_ERROR_WINDOW_MS);
+    }
+    expect(checkRateLimit(clientErrorRateLimitRules("203.0.113.7"), T0).limited).toBe(true);
+  });
+
+  it("expires after ten minutes", () => {
+    for (let i = 0; i < CLIENT_ERROR_LIMIT; i += 1) {
+      recordRateLimitFailure(clientErrorRateLimitRules("203.0.113.7"), T0 + i, CLIENT_ERROR_WINDOW_MS);
+    }
+    expect(
+      checkRateLimit(clientErrorRateLimitRules("203.0.113.7"), T0 + CLIENT_ERROR_WINDOW_MS + 1)
+        .limited,
+    ).toBe(false);
+  });
+
+  it("does not share counters with login throttling", () => {
+    for (let i = 0; i < LOGIN_IDENTIFIER_LIMIT; i += 1) {
+      recordRateLimitFailure(loginRateLimitRules("203.0.113.7", "rizky"), T0 + i);
+    }
+    expect(checkRateLimit(clientErrorRateLimitRules("203.0.113.7"), T0).limited).toBe(false);
+    expect(checkRateLimit(loginRateLimitRules("203.0.113.7", "rizky"), T0).limited).toBe(true);
   });
 });
 
