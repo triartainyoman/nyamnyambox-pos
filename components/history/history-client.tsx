@@ -50,7 +50,7 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
             Histori
           </p>
           <h1 className="mt-0.5 text-xl font-extrabold tracking-tight md:text-2xl">
@@ -96,13 +96,13 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
 
       <div className="grid grid-cols-3 gap-2.5">
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Transaksi
           </p>
           <p className="mt-1 text-lg font-extrabold">{formatNumber(summary.count)}</p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Omzet
           </p>
           <p className="mt-1 text-lg font-extrabold text-emerald-600">
@@ -110,7 +110,7 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Belum lunas
           </p>
           <p
@@ -127,10 +127,10 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
       <section className="space-y-2.5">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <ReceiptText className="size-4 text-orange-600" />
+            <ReceiptText className="size-4 text-orange-700" />
             Daftar Pesanan
           </h2>
-          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {isFetching && <RefreshCw className="size-3 animate-spin" />}
             {summary.count} transaksi
           </span>
@@ -166,7 +166,7 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
                 >
                   <div className="flex size-11 shrink-0 flex-col items-center justify-center rounded-xl bg-orange-50 text-orange-700">
                     <Clock className="size-3" />
-                    <span className="mt-0.5 text-[10px] font-bold">
+                    <span className="mt-0.5 text-xs font-bold">
                       {formatTime(order.created_at)}
                     </span>
                   </div>
@@ -176,19 +176,19 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
                       <p className="truncate text-[13px] font-bold">{order.receipt_number}</p>
                       {order.is_edited && <EditedBadge />}
                     </div>
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {order.cashier?.name ?? "-"} · {itemCount} item
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <ChannelBadge channel={order.channel} className="px-1.5 py-0 text-[10px]" />
-                      <PaymentBadge status={order.payment_status} className="px-1.5 py-0 text-[10px]" />
+                      <ChannelBadge channel={order.channel} className="px-1.5 py-0 text-xs" />
+                      <PaymentBadge status={order.payment_status} className="px-1.5 py-0 text-xs" />
                     </div>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1">
                     <div className="text-right">
                       <p className="text-sm font-extrabold">{formatRupiah(order.total_amount)}</p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {order.order_items?.length ?? 0} jenis
                       </p>
                     </div>

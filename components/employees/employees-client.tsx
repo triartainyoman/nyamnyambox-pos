@@ -47,7 +47,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
     <div className="space-y-5">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
             Akses &amp; Tim
           </p>
           <h1 className="mt-0.5 text-xl font-extrabold tracking-tight md:text-2xl">
@@ -64,7 +64,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
 
       <div className="grid grid-cols-3 gap-2.5">
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Total Akun
           </p>
           <p className="mt-1 flex items-center gap-1.5 text-lg font-extrabold">
@@ -73,7 +73,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Aktif
           </p>
           <p className="mt-1 text-lg font-extrabold text-emerald-600">
@@ -81,7 +81,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Nonaktif
           </p>
           <p className="mt-1 text-lg font-extrabold text-stone-400">
@@ -93,9 +93,9 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
       <section className="space-y-2.5">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <ShieldCheck className="size-4 text-orange-600" /> Daftar Akun
+            <ShieldCheck className="size-4 text-orange-700" /> Daftar Akun
           </h2>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Owner tidak dapat dinonaktifkan
           </span>
         </div>
@@ -130,26 +130,26 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="truncate text-[13px] font-bold">{employee.name}</p>
-                      <Badge variant={ROLE_VARIANT[employee.role]} className="px-1.5 py-0 text-[9px]">
+                      <Badge variant={ROLE_VARIANT[employee.role]} className="px-1.5 py-0 text-xs">
                         {ROLE_LABELS[employee.role]}
                       </Badge>
                       {isSelf && (
-                        <Badge variant="outline" className="px-1.5 py-0 text-[9px]">
+                        <Badge variant="outline" className="px-1.5 py-0 text-xs">
                           Anda
                         </Badge>
                       )}
                     </div>
                     {employee.role === "EMPLOYEE" ? (
-                      <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-stone-600">
+                      <p className="mt-0.5 flex items-center gap-1 truncate text-xs font-medium text-stone-600">
                         <AtSign className="size-3" />
                         {employee.username}
                       </p>
                     ) : null}
-                    <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                    <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
                       <Mail className="size-3" />
                       {employee.email}
                     </p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       Bergabung {formatDate(employee.created_at, false)}
                     </p>
                   </div>
@@ -161,7 +161,7 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
                       onCheckedChange={(value) => toggle(employee, value)}
                       aria-label={`Status ${employee.name}`}
                     />
-                    <span className="text-[9px] font-medium text-muted-foreground">
+                    <span className="text-xs font-medium text-muted-foreground">
                       {employee.is_active ? "Aktif" : "Nonaktif"}
                     </span>
                   </div>

@@ -29,7 +29,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
     <div className="space-y-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
             {todayLabel()}
           </p>
           <h1 className="mt-0.5 text-xl font-extrabold tracking-tight md:text-2xl">
@@ -49,7 +49,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
         <section>
           <div className="mb-2.5 flex items-end justify-between">
             <h2 className="text-sm font-bold">Menu Hari Ini</h2>
-            <span className="text-[11px] text-muted-foreground">Ketuk menu untuk menambah</span>
+            <span className="text-xs text-muted-foreground">Ketuk menu untuk menambah</span>
           </div>
 
           {isError ? (
@@ -89,7 +89,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
           <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold">
-                <ShoppingBag className="size-4 text-orange-600" /> Pesanan
+                <ShoppingBag className="size-4 text-orange-700" /> Pesanan
               </h2>
               <Badge variant="secondary">{totalItems} item</Badge>
             </div>
@@ -108,10 +108,10 @@ export function PosClient({ cashierName }: { cashierName: string }) {
                 {items.slice(0, 4).map((item) => (
                   <div key={item.productId} className="flex items-start justify-between gap-2 text-xs">
                     <span className="min-w-0">
-                      <span className="font-semibold text-orange-600">{item.quantity}x</span>{" "}
+                      <span className="font-semibold text-orange-700">{item.quantity}x</span>{" "}
                       <span className="line-clamp-1 font-medium">{item.name}</span>
                       {item.notes ? (
-                        <span className="block text-[10px] text-muted-foreground">
+                        <span className="block text-xs text-muted-foreground">
                           {item.notes}
                         </span>
                       ) : null}
@@ -122,7 +122,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
                   </div>
                 ))}
                 {items.length > 4 && (
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     +{items.length - 4} item lainnya
                   </p>
                 )}
@@ -155,12 +155,12 @@ export function PosClient({ cashierName }: { cashierName: string }) {
           >
             <span className="relative flex size-10 items-center justify-center rounded-xl bg-white/10">
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold">
+              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-orange-500 text-xs font-bold">
                 {totalItems}
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[10px] uppercase tracking-wide text-white/60">
+              <span className="block text-xs uppercase tracking-wide text-white/60">
                 Total pesanan
               </span>
               <span className="block text-base font-extrabold">{formatRupiah(totalPrice)}</span>

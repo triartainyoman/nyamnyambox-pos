@@ -119,7 +119,7 @@ export function EmployeeDialog({
                   required
                 />
               </div>
-              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {USERNAME_HINT}
               </p>
             </div>
@@ -134,7 +134,7 @@ export function EmployeeDialog({
                 autoComplete="off"
                 required
               />
-              <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 Tetap wajib untuk akun Supabase dan pemulihan password.
               </p>
             </div>
@@ -152,7 +152,7 @@ export function EmployeeDialog({
             </div>
 
             {isDemoMode && (
-              <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
                 Mode demo: akun hanya ditambahkan ke data lokal browser dan belum bisa dipakai
                 login. Gunakan akun demo rizky / sari untuk mencoba login kasir.
               </p>

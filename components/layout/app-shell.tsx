@@ -61,7 +61,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
                     : "text-stone-600 hover:bg-muted hover:text-stone-900",
                 )}
               >
-                <item.icon className={cn("size-[18px]", active && "text-orange-600")} />
+                <item.icon className={cn("size-[18px]", active && "text-orange-700")} />
                 {item.label}
                 {active && <span className="ml-auto size-1.5 rounded-full bg-orange-500" />}
               </Link>
@@ -70,7 +70,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
         </nav>
 
         {isDemoMode && (
-          <div className="mx-3 mb-3 rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-800">
+          <div className="mx-3 mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-800">
             <span className="font-bold">Mode demo</span> — data disimpan di browser ini.
           </div>
         )}
@@ -82,7 +82,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{profile.name}</p>
-              <p className="truncate text-[11px] text-muted-foreground">
+              <p className="truncate text-xs text-muted-foreground">
                 {ROLE_LABELS[profile.role]}
               </p>
             </div>
@@ -96,15 +96,15 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
           <Brand compact />
           <div className="flex items-center gap-2">
             {isDemoMode && (
-              <Badge variant="warning" className="text-[10px]">
+              <Badge variant="warning" className="text-xs">
                 Demo
               </Badge>
             )}
             <div className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pr-1 pl-2.5">
-              <span className="text-[11px] font-semibold text-stone-700">
+              <span className="text-xs font-semibold text-stone-700">
                 {profile.name.split(" ")[0]}
               </span>
-              <span className="flex size-7 items-center justify-center rounded-full bg-orange-100 text-[10px] font-bold text-orange-700">
+              <span className="flex size-7 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
                 {initials(profile.name)}
               </span>
             </div>
@@ -133,8 +133,8 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition-colors",
-                  active ? "text-orange-600" : "text-stone-500",
+                  "flex flex-col items-center gap-1 py-2.5 text-xs font-semibold transition-colors",
+                  active ? "text-orange-700" : "text-stone-500",
                 )}
               >
                 <span

@@ -56,7 +56,7 @@ export function LoginForm({
               required
             />
           </div>
-          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Kasir masuk dengan username. Owner masuk dengan email.
           </p>
         </div>
@@ -71,13 +71,13 @@ export function LoginForm({
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
-              className="pr-10 pl-9"
+              className="pr-12 pl-9"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
+              className="absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
               aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -101,10 +101,10 @@ export function LoginForm({
       {demoMode && (
         <div className="space-y-3 border-t border-dashed border-border pt-5">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-amber-700">
               Mode Demo
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               Supabase belum dikonfigurasi
             </span>
           </div>
@@ -120,7 +120,7 @@ export function LoginForm({
             </Button>
           </div>
           {demoPassword ? (
-            <div className="rounded-xl bg-stone-100 p-2.5 text-[10px] leading-relaxed text-stone-600">
+            <div className="rounded-xl bg-stone-100 p-2.5 text-xs leading-relaxed text-stone-600">
               <p className="font-semibold text-stone-700">Akun demo</p>
               <p>
                 Kasir: <span className="font-semibold">rizky</span> / {demoPassword}

@@ -114,7 +114,7 @@ export function ProductDialog({
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center gap-1 text-stone-400">
                     <ImageIcon className="size-5" />
-                    <span className="text-[9px]">Tanpa gambar</span>
+                    <span className="text-xs">Tanpa gambar</span>
                   </div>
                 )}
               </div>
@@ -183,7 +183,7 @@ export function ProductDialog({
                 />
               </div>
               {price ? (
-                <p className="mt-1 text-[11px] text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Tampil sebagai {formatRupiah(Number(price))}
                 </p>
               ) : null}
@@ -194,7 +194,7 @@ export function ProductDialog({
                 <p className="flex items-center gap-1.5 text-xs font-semibold">
                   <Sparkles className="size-3.5 text-orange-500" /> Promo Bundling
                 </p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Nama diberi label [PROMO] otomatis.
                 </p>
               </div>
@@ -204,7 +204,7 @@ export function ProductDialog({
             <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2.5">
               <div>
                 <p className="text-xs font-semibold">Menu Aktif</p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Jika nonaktif, menu disembunyikan dari kasir.
                 </p>
               </div>

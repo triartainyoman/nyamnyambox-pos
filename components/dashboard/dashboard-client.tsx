@@ -88,7 +88,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
     <div className="space-y-5">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
             Owner Analytics
           </p>
           <h1 className="mt-0.5 text-xl font-extrabold tracking-tight md:text-2xl">
@@ -98,7 +98,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
             Selamat datang, {ownerName.split(" ")[0]}. Ringkasan performa toko hari ini.
           </p>
         </div>
-        <Badge variant="outline" className="mt-1 w-fit gap-1.5 px-2.5 py-1 text-[11px]">
+        <Badge variant="outline" className="mt-1 w-fit gap-1.5 px-2.5 py-1 text-xs">
           <span className="size-1.5 rounded-full bg-emerald-500" />
           Live · diperbarui otomatis
         </Badge>
@@ -120,7 +120,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                 className="rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {metric.label}
                   </p>
                   <span className={cn("flex size-7 items-center justify-center rounded-lg", metric.tone)}>
@@ -134,7 +134,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                     {metric.value}
                   </p>
                 )}
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{metric.hint}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{metric.hint}</p>
               </div>
             ))}
           </div>
@@ -144,22 +144,22 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
               <CardHeader className="flex-row items-start justify-between">
                 <div>
                   <CardTitle>Penjualan Bulanan</CardTitle>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Tren pendapatan lunas 6 bulan terakhir
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
                     Bulan ini
                   </p>
                   {isLoading ? (
                     <Skeleton className="mt-1 h-5 w-20" />
                   ) : (
-                    <p className="text-sm font-extrabold text-orange-600">
+                    <p className="text-sm font-extrabold text-orange-700">
                       {formatRupiah(data?.monthRevenue ?? 0)}
                     </p>
                   )}
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {formatNumber(data?.monthOrders ?? 0)} transaksi
                   </p>
                 </div>
@@ -176,7 +176,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
             <Card>
               <CardHeader>
                 <CardTitle>Breakdown Kanal</CardTitle>
-                <p className="text-[11px] text-muted-foreground">Kontribusi omzet bulan ini</p>
+                <p className="text-xs text-muted-foreground">Kontribusi omzet bulan ini</p>
               </CardHeader>
               <CardContent className="space-y-3 pb-4">
                 {isLoading
@@ -192,7 +192,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                         : 0;
                       return (
                         <div key={entry.channel}>
-                          <div className="flex items-center justify-between text-[11px]">
+                          <div className="flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1.5 font-medium">
                               <span
                                 className={cn("size-2 rounded-full", CHANNEL_COLORS[entry.channel])}
@@ -209,7 +209,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
-                          <div className="mt-0.5 flex justify-between text-[10px] text-muted-foreground">
+                          <div className="mt-0.5 flex justify-between text-xs text-muted-foreground">
                             <span>{entry.orders} order</span>
                             <span>{formatRupiah(entry.revenue)}</span>
                           </div>
@@ -227,7 +227,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="size-4 text-amber-500" /> Produk Terlaris
                   </CardTitle>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Berdasarkan kuantitas bulan ini
                   </p>
                 </div>
@@ -248,7 +248,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                       >
                         <span
                           className={cn(
-                            "flex size-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-extrabold",
+                            "flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-extrabold",
                             index === 0
                               ? "bg-amber-100 text-amber-700"
                               : index === 1
@@ -264,7 +264,7 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                           <p className="truncate text-xs font-semibold">
                             {product.name.replace(/^\[PROMO\]\s*/, "")}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {formatNumber(product.quantity)} terjual
                           </p>
                         </div>
@@ -287,9 +287,9 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="size-4 text-sky-500" /> Transaksi Terakhir
                   </CardTitle>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">Pesanan hari ini</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Pesanan hari ini</p>
                 </div>
-                <Button asChild variant="ghost" size="sm" className="h-8 text-[11px]">
+                <Button asChild variant="ghost" size="sm" className="h-8 text-xs">
                   <Link href="/history">
                     Lihat semua <ArrowUpRight className="size-3" />
                   </Link>
@@ -310,19 +310,19 @@ export function DashboardClient({ ownerName }: { ownerName: string }) {
                         key={order.id}
                         className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-muted/50"
                       >
-                        <div className="flex size-8 shrink-0 flex-col items-center justify-center rounded-lg bg-stone-100 text-[9px] font-bold text-stone-600">
+                        <div className="flex h-9 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-stone-100 text-xs font-bold text-stone-600">
                           {formatTime(order.created_at)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[11px] font-bold">{order.receipt_number}</p>
+                          <p className="truncate text-xs font-bold">{order.receipt_number}</p>
                           <div className="mt-0.5 flex items-center gap-1">
                             <ChannelBadge
                               channel={order.channel}
-                              className="px-1.5 py-0 text-[9px]"
+                              className="px-1.5 py-0 text-xs"
                             />
                             <PaymentBadge
                               status={order.payment_status}
-                              className="px-1.5 py-0 text-[9px]"
+                              className="px-1.5 py-0 text-xs"
                             />
                           </div>
                         </div>

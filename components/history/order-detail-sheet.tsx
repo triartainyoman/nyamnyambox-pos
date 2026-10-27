@@ -215,7 +215,7 @@ export function OrderDetailSheet({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="line-clamp-2 text-xs font-semibold">{item.name}</p>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {formatRupiah(item.price)}
                           </p>
                         </div>
@@ -264,7 +264,7 @@ export function OrderDetailSheet({
                         value={item.notes}
                         onChange={(event) => updateNotes(item.product_id, event.target.value)}
                         placeholder="Catatan item (opsional)"
-                        className="mt-2 h-8 text-[11px]"
+                        className="mt-2 h-8 text-xs"
                       />
                     </div>
                   ))}

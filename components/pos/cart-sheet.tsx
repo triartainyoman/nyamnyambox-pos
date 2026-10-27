@@ -103,10 +103,10 @@ export function CartSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <ShoppingBag className="size-4 text-orange-600" />
+            <ShoppingBag className="size-4 text-orange-700" />
             Pesanan
             {totalItems > 0 && (
-              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-700">
+              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
                 {totalItems} item
               </span>
             )}
@@ -132,7 +132,7 @@ export function CartSheet({
                 <button
                   type="button"
                   onClick={() => clear()}
-                  className="flex items-center gap-1 text-[11px] font-medium text-red-600 hover:underline"
+                  className="flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
                 >
                   <Trash2 className="size-3" /> Kosongkan
                 </button>
@@ -154,13 +154,13 @@ export function CartSheet({
                         <button
                           type="button"
                           onClick={() => remove(item.productId)}
-                          className="rounded-md p-1 text-stone-400 hover:bg-red-50 hover:text-red-600"
+                          className="rounded-lg p-2 text-stone-400 hover:bg-red-50 hover:text-red-600"
                           aria-label={`Hapus ${item.name}`}
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2 className="size-4" />
                         </button>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {formatRupiah(item.price)}
                       </p>
 
@@ -170,22 +170,22 @@ export function CartSheet({
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            className="size-6 rounded-full"
+                            className="size-8 rounded-full"
                             onClick={() => decrement(item.productId)}
                             aria-label="Kurangi"
                           >
-                            <Minus className="size-3" />
+                            <Minus className="size-4" />
                           </Button>
                           <span className="min-w-5 text-center text-xs font-bold">{item.quantity}</span>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            className="size-6 rounded-full"
+                            className="size-8 rounded-full"
                             onClick={() => increment(item.productId)}
                             aria-label="Tambah"
                           >
-                            <Plus className="size-3" />
+                            <Plus className="size-4" />
                           </Button>
                         </div>
                         <p className="text-sm font-extrabold text-stone-900">
@@ -209,7 +209,7 @@ export function CartSheet({
                               )
                             }
                             className={cn(
-                              "rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors",
+                              "rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
                               item.notes === preset
                                 ? "border-orange-500 bg-orange-50 text-orange-700"
                                 : "border-border text-stone-600 hover:border-orange-200",
@@ -230,7 +230,7 @@ export function CartSheet({
                           type="button"
                           size="sm"
                           variant="ghost"
-                          className="h-7 text-[11px]"
+                          className="h-7 text-xs"
                           onClick={() => setNotesFor(null)}
                         >
                           Simpan catatan
@@ -241,7 +241,7 @@ export function CartSheet({
                     <button
                       type="button"
                       onClick={() => setNotesFor(item.productId)}
-                      className="mt-2 flex w-full items-center justify-between gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left text-[11px] text-muted-foreground hover:bg-muted"
+                      className="mt-2 flex w-full items-center justify-between gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted"
                     >
                       <span className="truncate">
                         {item.notes ? `Catatan: ${item.notes}` : "Tambah catatan item"}
@@ -339,7 +339,7 @@ export function CartSheet({
                 className="pl-9"
               />
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Dipakai untuk mengirim rincian nota lewat WhatsApp setelah pesanan dibuat.
             </p>
           </div>
@@ -348,7 +348,7 @@ export function CartSheet({
         <SheetFooter>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Total</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Total</p>
               <p className="text-xl font-extrabold text-stone-900">{formatRupiah(totalPrice)}</p>
             </div>
             <Select value={paymentStatus} onValueChange={(value) => setPaymentStatus(value as PaymentStatus)}>
