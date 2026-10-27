@@ -76,6 +76,29 @@ test("kasir membuat pesanan, melihat nota, lalu mengeditnya di riwayat", async (
   await expect(detail).toContainText("* Transaksi telah diedit");
   await expect(detail).toContainText("0899999999");
 
+  // Printing must show the receipt only: no sheet chrome, no website footer.
+  await page.emulateMedia({ media: "print" });
+  const printCopy = page.locator(".receipt-print").first();
+  await expect(printCopy).toBeVisible();
+  await expect(printCopy).not.toContainText("nyamnyambox.com");
+  const visibleOutsideReceipt = await page.evaluate(() => {
+    const receipt = document.querySelector(".receipt-print");
+    return [...document.querySelectorAll("body *")].filter((element) => {
+      if (receipt && (element === receipt || receipt.contains(element) || element.contains(receipt))) {
+        return false;
+      }
+      if (["HTML", "BODY", "HEAD", "SCRIPT", "STYLE"].includes(element.tagName)) return false;
+      const style = getComputedStyle(element);
+      return (
+        style.visibility === "visible" &&
+        style.display !== "none" &&
+        element.getBoundingClientRect().width > 0
+      );
+    }).length;
+  });
+  expect(visibleOutsideReceipt).toBe(0);
+  await page.emulateMedia({ media: "screen" });
+
   await detail.getByRole("button", { name: "Tutup" }).click();
   await expect(orderCard.getByText("Diedit")).toBeVisible();
 });
