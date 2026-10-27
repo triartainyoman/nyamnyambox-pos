@@ -385,6 +385,68 @@ Dua lapis, pakai sesuai jenis masalah:
 **Yang tidak boleh**: force-push `main`, menghapus deployment lama sebelum yakin
 deployment baru sehat, atau restore DB tanpa dump pengaman.
 
+### 5.6 Data tidak muncul / halaman kosong
+
+Urutkan dari yang paling sering:
+
+1. **Menu kosong di `/pos`** — cek `/products`: apakah semua menu berstatus
+   *Nonaktif*? Aktifkan lewat switch. Menu nonaktif memang tidak muncul di POS.
+2. **Riwayat kosong padahal kasir baru membuat order** — pastikan filter tanggal
+   di halaman Riwayat menunjuk hari yang benar (zona bisnis **Asia/Jakarta**;
+   order lewat tengah malam WIB masuk ke tanggal berikutnya).
+3. **Dashboard kosong** — dashboard hanya menghitung hari ini (WIB). Kalau
+   transaksi terjadi kemarin, angka hari ini wajar nol. Cek grafik/top produk
+   untuk rentang bulan.
+4. **Kasir melihat data beda dengan Owner** — kasir hanya melihat **hari ini**;
+   Owner bisa memilih tanggal mana pun lewat filter.
+5. **Semua halaman kosong / 500** — cek `/api/health`. Kalau `database` atau
+   `auth` = `down`, ikuti §5.1. Kalau `app` = `down`, rollback (§5.5).
+6. **Baru restore database** — jalankan `supabase/verify.sql`; kalau ada baris
+   bukan `OK`, restore belum lengkap.
+7. **Masih ragu** — cek log Vercel untuk `request.error` pada waktu kejadian,
+   lalu cocokkan dengan nomor nota.
+
+### 5.7 Rotasi kunci
+
+Lakukan kalau ada kecurigaan kebocoran (key ter-paste di chat, laptop hilang,
+commit tidak sengaja) atau sebagai rutinitas tahunan.
+
+**A. Service role / secret key (paling sering)**
+
+1. Supabase → **Project Settings → API Keys** → buat secret key baru.
+2. Perbarui `SUPABASE_SERVICE_ROLE_KEY` di `.env.local` **dan** di Vercel
+   (Production, Preview, Development).
+3. Redeploy production.
+4. Verifikasi: login kasir (username) berhasil, tambah kasir berhasil,
+   `/api/health` `ok`.
+5. Hapus key lama di Supabase.
+
+**B. Password database (untuk `pg_dump` / restore)**
+
+1. Supabase → **Project Settings → Database** → **Reset database password**.
+2. Simpan password baru ke `~/.nyb-supabase-db-password` (izin `600`).
+3. Perbarui GitHub Actions secret `SUPABASE_DB_URL` dengan password baru.
+4. Jalankan workflow **Database backup** secara manual (*Run workflow*) untuk
+   memastikan dump masih bisa dibuat.
+
+**C. Password Owner**
+
+1. Supabase → **Authentication → Users** → cari email Owner → **Reset
+   password**.
+2. Simpan password baru di password manager dan `~/.nyb-owner-password`
+   (lokal, izin `600`).
+3. Login ulang di production untuk memastikan berhasil.
+
+**D. Anon / publishable key**
+
+Aman dipublikasikan (memang dipakai browser), tetapi tetap bisa dirotasi:
+ganti `NEXT_PUBLIC_SUPABASE_ANON_KEY` di `.env.local` + Vercel, redeploy,
+lalu hapus key lama. Rotasi ini memutus sesi yang sedang berjalan.
+
+Setelah rotasi apa pun: catat tanggal + alasan di laporan insiden, dan pastikan
+tidak ada key baru yang masuk ke git (`git log -p | grep -i 'service_role'`
+harus kosong).
+
 ---
 
 ## 6. Log drill restore

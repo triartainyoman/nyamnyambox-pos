@@ -360,9 +360,10 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
   - Artefak cetak: tombol/step di sheet detail riwayat ikut tercetak karena `transition-all` menahan `visibility` saat snapshot print. `@media print` sekarang mematikan `transition`/`animation` dan `SheetHeader`/`SheetBody`/`SheetFooter` diberi `no-print`, sehingga hanya salinan struk (`hidden print:block`) yang tampil.
 - **Rollback**: Vercel *Deployments* → pilih deployment hijau sebelumnya → **Promote to Production** (instan, tanpa rebuild); DB memakai dump mingguan `backup.yml` + prosedur `docs/RUNBOOK.md` §3.7. Langkah lengkap ada di `docs/RUNBOOK.md` §5.5.
 - **Domain kustom: ditunda.** Owner belum punya domain, jadi T16 selesai dengan subdomain `*.vercel.app` (HTTPS otomatis). Saat domain siap: tambahkan di Vercel → *Domains*, arahkan DNS, lalu perbarui Site URL/Redirect URLs di Supabase — tanpa perubahan kode.
+- **Verifikasi pasca-merge** (`4136e5d`, PR #6): 3 check wajib hijau (`Typecheck, lint, unit tests`, `Production build`, `E2E (demo mode)`); `/api/health` → `commit: 4136e5d`, DB 30 ms, auth 55 ms. Buka nota lama di `/history` dengan media print di production: hanya struk yang terlihat (0 elemen lain), `nyamnyambox.com` tidak ada, 0 error console/network.
 
-### [ ] T17 — Handover & SOP
-**Prioritas:** P1 · **Butuh user:** ya (review)
+### [~] T17 — Handover & SOP
+**Prioritas:** P1 · **Butuh user:** ya (review) · **Dokumen siap:** 2026-10-28
 
 - SOP kasir: login, buat order, cetak, kirim WA, edit, logout.
 - Panduan owner: tambah menu, promo, kasir, cek dashboard, nonaktifkan akun.
@@ -370,6 +371,19 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Checklist go-live dan kontak eskalasi.
 
 **Selesai jika:** dokumen dibagikan dan owner/kasir sudah mencoba alur utama.
+
+**Hasil:**
+- **`docs/SOP-KASIR.md`** — 10 bagian, bahasa toko (bukan teknis): cek sebelum buka toko, login username, alur order (item, catatan, kanal, metode, status, nomor WA), cetak 58/80 mm + pengaturan dialog cetak, kirim WhatsApp, pesanan baru, riwayat & koreksi (kasir hanya hari ini), logout, tabel troubleshooting 8 gejala, dan 6 aturan wajib.
+- **`docs/PANDUAN-OWNER.md`** — login email, arti tiap kartu Dashboard, kelola menu/harga/gambar, konvensi promo `[PROMO]`, tambah & nonaktifkan kasir (switch Owner/self terkunci), reset password lewat dashboard Supabase, edit lintas tanggal, ekspor CSV bulanan, rutinitas harian/mingguan/bulanan, keamanan akun, dan tabel batasan free plan.
+- **`docs/GO-LIVE.md`** — checklist pra-launch (infrastruktur, keamanan, uji terima) dengan status nyata, langkah hari-H, pemicu rollback kode vs database, 10 uji terima Owner/kasir, tabel kontak eskalasi + alur 4 tingkat, dan kolom tanda tangan serah terima.
+- **`docs/RUNBOOK.md`** diperluas: **§5.6 Data tidak muncul / halaman kosong** (menu nonaktif, filter tanggal WIB, dashboard harian, health, pasca-restore) dan **§5.7 Rotasi kunci** (service/secret key, password DB + secret `SUPABASE_DB_URL`, password Owner, anon key, plus pemeriksaan `git log`).
+- **`README.md`** — bagian *Handover & training* + entri ketiga dokumen di struktur project.
+
+**Sisa (butuh user):**
+1. Isi nomor WA Owner + kontak pendamping teknis di `docs/GO-LIVE.md` §5.
+2. Owner & kasir mencoba 10 uji terima di `docs/GO-LIVE.md` §4 pada perangkat toko (printer, HP, WhatsApp).
+3. Tanda tangan serah terima di §6 — setelah itu T17 bisa ditutup.
+4. Opsional: drill restore ke project staging (`docs/RUNBOOK.md` §3.5) dan domain kustom (T16).
 
 ---
 

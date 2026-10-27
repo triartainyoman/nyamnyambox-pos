@@ -481,12 +481,30 @@ app/api/health/            # liveness + Supabase health for uptime monitors
 app/api/log-error/         # client error sink
 docs/QA_MATRIX.md          # QA checklist: automated results + manual device items
 docs/RUNBOOK.md            # logging, uptime, backup/restore, bookkeeping export
+docs/SOP-KASIR.md          # cashier SOP: login, order, print, WhatsApp, edit, logout
+docs/PANDUAN-OWNER.md      # owner guide: menu, promos, cashiers, dashboard, limits
+docs/GO-LIVE.md            # go-live checklist, acceptance tests, escalation contacts
 tests/unit/                # Vitest unit tests
 e2e/                       # Playwright smoke tests (demo mode)
 vitest.config.mts          # Vitest config (alias @, node/jsdom environments)
 playwright.config.ts       # Playwright config + demo-mode web server
 proxy.ts                   # Next.js 16 auth middleware
 ```
+
+---
+
+## Handover & training
+
+Three documents cover day-to-day use and launch:
+
+| Document | Audience | Contents |
+| --- | --- | --- |
+| [`docs/SOP-KASIR.md`](docs/SOP-KASIR.md) | Cashier | Login, build an order, print 58/80 mm, send via WhatsApp, edit same-day orders, logout, troubleshooting table |
+| [`docs/PANDUAN-OWNER.md`](docs/PANDUAN-OWNER.md) | Owner | Dashboard metrics, menu/promo management, cashier accounts and password resets, reporting export, security routine, plan limits |
+| [`docs/GO-LIVE.md`](docs/GO-LIVE.md) | Owner + technical | Pre-launch checklist, go-live steps, rollback triggers, acceptance tests, escalation contacts, sign-off |
+
+Operational procedures (logs, health, backup/restore, key rotation, incidents)
+stay in [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 ---
 
