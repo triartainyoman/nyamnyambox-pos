@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Loader2, Minus, Phone, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,12 +54,16 @@ export function CartSheet({
   const [notesFor, setNotesFor] = useState<string | null>(null);
 
   const createOrder = useCreateOrder();
+  // `disabled` only applies after React re-renders, so two clicks in the same
+  // tick (fast double tap, double Enter) would both start a mutation.
+  const submittingRef = useRef(false);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   async function handleSubmit() {
-    if (!items.length) return;
+    if (!items.length || submittingRef.current) return;
+    submittingRef.current = true;
     try {
       const order = await createOrder.mutateAsync({
         channel,
@@ -83,6 +87,8 @@ export function CartSheet({
       onCreated(order);
     } catch (error) {
       toast.error(friendlyError(error, "Gagal membuat pesanan"));
+    } finally {
+      submittingRef.current = false;
     }
   }
 
