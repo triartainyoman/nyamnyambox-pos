@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { homePathForRole } from "@/lib/constants";
@@ -8,6 +8,14 @@ import { DEMO_COOKIE } from "@/lib/demo/constants";
 import { demoLogin } from "@/lib/demo/session";
 import { isAuthConfigured, isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { friendlyError, UNAVAILABLE_ERROR } from "@/lib/errors";
+import {
+  checkRateLimit,
+  clearRateLimit,
+  clientIpFromHeaders,
+  loginRateLimitRules,
+  rateLimitMessage,
+  recordRateLimitFailure,
+} from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
@@ -30,12 +38,22 @@ export async function loginAction(
     return { error: "Username/email dan password wajib diisi." };
   }
 
+  // Throttle before doing any work: repeated wrong passwords should not reach
+  // Supabase Auth, and the message must not reveal whether the account exists.
+  const rules = loginRateLimitRules(clientIpFromHeaders(await headers()), identifier);
+  const limit = checkRateLimit(rules);
+  if (limit.limited) {
+    return { error: rateLimitMessage(limit.retryAfterSeconds) };
+  }
+
   if (isDemoMode) {
     const profile = demoLogin(identifier, password);
     if (!profile) {
+      recordRateLimitFailure(rules);
       return { error: "Username/email atau password salah." };
     }
 
+    clearRateLimit(rules);
     (await cookies()).set(DEMO_COOKIE, profile.role, {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
@@ -51,6 +69,7 @@ export async function loginAction(
   if (!identifier.includes("@")) {
     const username = normalizeUsername(identifier);
     if (validateUsername(username)) {
+      recordRateLimitFailure(rules);
       return { error: "Username atau password salah." };
     }
 
@@ -79,6 +98,7 @@ export async function loginAction(
       return { error: friendlyError(lookupError, "Gagal memproses login. Coba lagi.") };
     }
     if (!profile || !profile.is_active || profile.role !== "EMPLOYEE") {
+      recordRateLimitFailure(rules);
       return { error: "Username atau password salah." };
     }
 
@@ -99,12 +119,15 @@ export async function loginAction(
       detail.includes("network") ||
       detail.includes("timeout");
 
-    return {
-      error: infrastructureFailure
-        ? friendlyError(error, UNAVAILABLE_ERROR)
-        : "Username/email atau password salah. Silakan coba lagi.",
-    };
+    if (infrastructureFailure) {
+      return { error: friendlyError(error, UNAVAILABLE_ERROR) };
+    }
+
+    recordRateLimitFailure(rules);
+    return { error: "Username/email atau password salah. Silakan coba lagi." };
   }
+
+  clearRateLimit(rules);
 
   const { data: profile } = await supabase
     .from("profiles")

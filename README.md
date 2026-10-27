@@ -282,6 +282,21 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 
 ---
 
+## Security
+
+- **Headers.** `next.config.ts` adds `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` to every response (see `lib/security.ts`).
+- **CSP.** `proxy.ts` builds a per-request policy with a fresh nonce. Production uses `script-src 'self' 'nonce-…' 'strict-dynamic'`; Next.js reads the nonce from the request header and attaches it to its own scripts. `style-src` keeps `'unsafe-inline'` because Radix and Recharts set inline `style` attributes, and `connect-src` is limited to the app plus the Supabase REST/realtime origins. Development uses a looser policy so Turbopack HMR keeps working. `upgrade-insecure-requests` is only sent when the document itself is HTTPS.
+- **Login throttling.** `lib/rate-limit.ts` counts failed logins per identifier (5) and per IP (20) in a fixed 15-minute window; a successful login clears both. Blocked attempts get a generic retry message and never reach Supabase Auth. The counter is in-memory (per serverless instance) — swap it for Upstash if a shared counter is ever needed.
+- **Secrets.** Only `NEXT_PUBLIC_*` values reach the browser; the service-role key stays server-side and is never logged. `npm audit` reports zero known vulnerabilities.
+
+To check the headers yourself:
+
+```bash
+curl -sD - -o /dev/null https://nyamnyambox-pos.vercel.app/login | grep -iE "content-security-policy|strict-transport|x-content-type|x-frame|referrer-policy"
+```
+
+---
+
 ## Error handling
 
 - `lib/errors.ts` is the single place that turns Supabase/PostgREST/network failures into short Indonesian messages. Internal details (table names, constraints, SQL, stack traces) never reach the UI.
@@ -426,6 +441,8 @@ lib/
   supabase/                # browser/server clients, admin client + DB types
   username.ts              # username normalization + validation rules
   whatsapp.ts              # receipt message + wa.me URL builder
+  security.ts              # security headers + CSP builder
+  rate-limit.ts            # in-memory login throttling
 stores/useCartStore.ts     # persisted cart
 supabase/
   migrations/0001_init.sql # schema, RLS, RPCs, seed
@@ -453,3 +470,4 @@ proxy.ts                   # Next.js 16 auth middleware
 - Product images are URLs (seeded with local SVGs); there is no image upload bucket yet.
 - Demo Mode is single-browser and not suitable for real operations.
 - Customer WhatsApp delivery is a `wa.me` deep link, not an automated messaging API.
+- Login throttling is in-memory per serverless instance; a distributed brute force across many instances is only slowed, not fully blocked.

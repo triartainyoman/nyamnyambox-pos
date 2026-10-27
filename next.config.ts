@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { SECURITY_HEADERS } from "./lib/security";
+
 /**
  * Surface misconfiguration at build/start time. The app still fails safe at
  * runtime (login shows a configuration notice), but a loud warning makes a
@@ -33,6 +35,16 @@ const nextConfig: NextConfig = {
   // The app is fully dynamic (auth + live order data), so we opt out of
   // Cache Components and use the classic dynamic rendering model.
   cacheComponents: false,
+  // Static security headers for every response (pages, redirects, assets).
+  // The CSP is request-specific (nonce), so it is set in `proxy.ts`.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: SECURITY_HEADERS.map(({ key, value }) => ({ key, value })),
+      },
+    ];
+  },
 };
 
 export default nextConfig;
