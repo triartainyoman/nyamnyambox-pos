@@ -57,3 +57,6 @@ next-env.d.ts
 *.dump
 *.sql.gz
 orders-*.csv
+
+# Lighthouse reports (local performance evidence)
+/.lighthouse/

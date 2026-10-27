@@ -30,7 +30,7 @@ export function ReceiptSizeToggle({
           onClick={() => onChange(size)}
           aria-pressed={value === size}
           className={cn(
-            "rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors",
+            "rounded-full px-2 py-0.5 text-xs font-semibold transition-colors",
             value === size
               ? "bg-white text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",

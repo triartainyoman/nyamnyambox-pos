@@ -55,7 +55,7 @@ export function ProductsClient() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
             Katalog
           </p>
           <h1 className="mt-0.5 text-xl font-extrabold tracking-tight md:text-2xl">
@@ -72,7 +72,7 @@ export function ProductsClient() {
 
       <div className="grid grid-cols-3 gap-2.5">
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Total Menu
           </p>
           <p className="mt-1 flex items-center gap-1.5 text-lg font-extrabold">
@@ -81,7 +81,7 @@ export function ProductsClient() {
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Aktif
           </p>
           <p className="mt-1 text-lg font-extrabold text-emerald-600">
@@ -89,10 +89,10 @@ export function ProductsClient() {
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Promo
           </p>
-          <p className="mt-1 flex items-center gap-1.5 text-lg font-extrabold text-orange-600">
+          <p className="mt-1 flex items-center gap-1.5 text-lg font-extrabold text-orange-700">
             <Sparkles className="size-4" />
             {formatNumber(promoCount)}
           </p>
@@ -145,7 +145,7 @@ export function ProductsClient() {
                     </div>
                   )}
                   {isPromo && (
-                    <span className="absolute top-1 left-1 rounded-full bg-orange-500 px-1.5 py-0.5 text-[8px] font-extrabold text-white">
+                    <span className="absolute top-1 left-1 rounded-full bg-orange-700 px-1.5 py-0.5 text-xs font-extrabold text-white">
                       PROMO
                     </span>
                   )}
@@ -155,12 +155,12 @@ export function ProductsClient() {
                   <p className="line-clamp-2 text-[13px] font-semibold leading-snug">
                     {product.name.replace(/^\[PROMO\]\s*/, "")}
                   </p>
-                  <p className="mt-0.5 text-sm font-extrabold text-orange-600">
+                  <p className="mt-0.5 text-sm font-extrabold text-orange-700">
                     {formatRupiah(product.price)}
                   </p>
                   <Badge
                     variant={product.is_active ? "success" : "secondary"}
-                    className="mt-1 px-1.5 py-0 text-[9px]"
+                    className="mt-1 px-1.5 py-0 text-xs"
                   >
                     {product.is_active ? "Tersedia" : "Nonaktif"}
                   </Badge>

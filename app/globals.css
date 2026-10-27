@@ -14,7 +14,9 @@
   --popover: #ffffff;
   --popover-foreground: #1c1917;
 
-  --primary: #ea580c;
+  /* Orange 700 (#c2410c) keeps white button text at ~5.2:1 contrast (AA).
+     Orange 600 (#ea580c) only reaches ~3.6:1 and failed Lighthouse. */
+  --primary: #c2410c;
   --primary-foreground: #ffffff;
 
   --secondary: #f5f5f4;
@@ -85,6 +87,13 @@
 
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  /* Links are the one interactive element without a component-level ring.
+     Keyboard users need a visible focus indicator on every nav item. */
+  a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
 

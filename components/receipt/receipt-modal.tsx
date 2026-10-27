@@ -47,7 +47,7 @@ export function ReceiptModal({
 
           <DialogFooter className="no-print">
             <div className="flex w-full items-center justify-center gap-2 pb-1 sm:mr-auto sm:w-auto sm:justify-start">
-              <span className="text-[11px] font-medium text-muted-foreground">Ukuran cetak</span>
+              <span className="text-xs font-medium text-muted-foreground">Ukuran cetak</span>
               <ReceiptSizeToggle value={receiptSize} onChange={setReceiptSize} />
             </div>
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">

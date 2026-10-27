@@ -313,14 +313,27 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 
 **Sisa (butuh user):** drill restore penuh ke **project staging Supabase** (login + UI nyata) — langkah 1–6 sudah tertulis di `docs/RUNBOOK.md` §3.5 dan butuh project uji baru yang hanya bisa dibuat dari dashboard Supabase. Drill PGlite di atas sudah menutup verifikasi skema/RLS/RPC.
 
-### [ ] T15 — Performance & aksesibilitas
-**Prioritas:** P2 · **Butuh user:** tidak
+### [x] T15 — Performance & aksesibilitas
+**Prioritas:** P2 · **Butuh user:** tidak · **Selesai:** 2026-10-27
 
 - Lighthouse mobile untuk `/login`, `/pos`, `/dashboard`.
 - Optimasi gambar menu (SVG/next/image), font, dan bundle.
 - Perbaiki label form, kontras, focus state, dan target sentuh.
 
 **Selesai jika:** skor Lighthouse memadai dan tidak ada pelanggaran a11y kritis.
+
+**Hasil:**
+- **Baseline** (production `57e4d81`, Lighthouse 12 mobile; `/pos` & `/dashboard` dengan sesi Owner lewat Chrome DevTools Protocol): `/login` **96 / 96 / 96**, `/pos` **98 / 91 / 100**, `/dashboard` **98 / 91 / 96** (performance / accessibility / best-practices). Pelanggaran a11y: `color-contrast` (tombol `#ea580c` + teks putih 3.55:1, label oranye 3.46–3.59:1, `text-red-600/80` 3.89:1) dan `link-name` (logo compact tanpa nama aksesibel).
+- **Sesudah** (production build lokal dari branch ini, mesin & jaringan yang sama): `/login` **96 / 100 / 100**, `/pos` **100 / 100 / 100**, `/dashboard` **100 / 100 / 100**. FCP 0.6–0.8 s, CLS **0**, TBT 10–50 ms, Speed Index **0.8–0.9 s** (baseline 3.3–4.0 s). Total transfer 278 KiB (`/login`), 78 KiB (`/pos`), 23 KiB (`/dashboard`).
+- **Kontras**: `--primary` menjadi `#c2410c` (teks putih 5.2:1) dan seluruh teks oranye di atas latar terang memakai `orange-700` (≥5.0:1); `text-red-600/80` → `red-700`; badge PROMO `orange-500` → `orange-700`.
+- **Nama aksesibel & teks**: logo compact di header sekarang punya `aria-label="Nyamnyambox POS"`; seluruh teks 9/10/11 px dinaikkan ke 12 px kecuali struk thermal (sengaja rapat untuk 58 mm); label form sudah terhubung (`htmlFor`/`id`) dan diverifikasi Lighthouse (`label` bersih).
+- **Focus & target sentuh**: outline `:focus-visible` untuk semua link; tombol tampilkan password 44 px; stepper keranjang dan tombol hapus 24 px → 32 px; tombol utama tetap 44 px.
+- **Region**: `vercel.json` baru mengunci function ke `sin1` (Singapura, sebelah Supabase `ap-southeast-1`) — menghapus ~500 ms RTT `iad1 → Singapura` per request. Verifikasi setelah deploy: `curl -sI https://nyamnyambox-pos.vercel.app/login | grep -i x-vercel-id` harus menampilkan `sin1`.
+- **Auth**: `getClaims()` (verifikasi JWT ES256 lokal via JWKS) menggantikan `getUser()` di `proxy.ts` dan `lib/auth.ts`, ditambah `cache()` React sehingga satu render hanya sekali query `profiles` — dari 4 round trip (2× `getUser` + 2× `profiles`) menjadi 1 query `profiles` + verifikasi JWT lokal. Fallback ke `getUser()` bila JWKS gagal agar tidak mengunci toko. Proxy juga mengalihkan pengunjung yang sudah login dari `/login` ke `/`, sehingga halaman login tidak lagi menunggu query profil (login → dashboard di build lokal turun 3.1 s → 1.95 s).
+- **Navigasi**: `app/(app)/loading.tsx` (skeleton dengan `role="status"`) untuk transisi antar-halaman; `useOrders` memakai `keepPreviousData` agar ganti tanggal tidak berkedip kosong.
+- **Gambar/font/bundle**: foto menu tetap `<img loading="lazy" decoding="async">` di dalam kotak `aspect-square` (CLS 0). `next/image` sengaja tidak dipakai: URL gambar diisi Owner (host bebas) dan placeholder berupa SVG, sehingga optimizer harus dibuka untuk semua host atau `dangerouslyAllowSVG` — risiko lebih besar daripada manfaatnya untuk 8–20 gambar menu. Font sudah self-hosted `next/font` (2 woff2, preload) dan tidak ada font pihak ketiga.
+- **Uji**: 181 unit test (5 baru untuk `fallbackProfileFromIdentity`), 13 E2E, `npm run qa:check` **41/41** (termasuk tab order & ring fokus, tanpa overflow horizontal), `npm run ci` hijau.
+
 
 ---
 

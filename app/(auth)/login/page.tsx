@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   Flame,
@@ -9,8 +8,6 @@ import {
 
 import { LoginForm } from "@/components/auth/login-form";
 import { Brand } from "@/components/brand";
-import { getCurrentProfile } from "@/lib/auth";
-import { homePathForRole } from "@/lib/constants";
 import { DEMO_PASSWORD } from "@/lib/demo/session";
 import { isAuthConfigured, isDemoMode } from "@/lib/env";
 
@@ -25,9 +22,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const profile = await getCurrentProfile();
-  if (profile) redirect(homePathForRole(profile.role));
-
+  // Signed-in visitors never reach this render: the Proxy checks the JWT and
+  // redirects to `/`, which resolves the role. Keeping the auth check out of
+  // the page removes a profile query from the most-visited cold entry point.
   const { next } = await searchParams;
 
   return (
@@ -42,7 +39,7 @@ export default async function LoginPage({
           </span>
           <div>
             <p className="text-lg font-extrabold tracking-tight">Nyamnyambox</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Ricebowl &amp; Snacks</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-white/70">Ricebowl &amp; Snacks</p>
           </div>
         </div>
 
@@ -70,7 +67,7 @@ export default async function LoginPage({
           </div>
         </div>
 
-        <p className="relative text-[11px] text-white/60">
+        <p className="relative text-xs text-white/60">
           © {new Date().getFullYear()} Nyamnyambox · POS v1.0
         </p>
       </section>
@@ -104,7 +101,7 @@ export default async function LoginPage({
                   konfigurasi sebelum aplikasi digunakan.
                 </p>
                 {process.env.NODE_ENV !== "production" ? (
-                  <p className="rounded-xl bg-stone-100 px-3 py-2 text-[10px] leading-relaxed text-stone-600">
+                  <p className="rounded-xl bg-stone-100 px-3 py-2 text-xs leading-relaxed text-stone-600">
                     Mode pengembangan: isi <code className="font-semibold">.env.local</code> dengan
                     kredensial Supabase, atau set{" "}
                     <code className="font-semibold">NEXT_PUBLIC_DEMO_MODE=true</code> untuk mencoba
@@ -116,13 +113,13 @@ export default async function LoginPage({
           </div>
 
           {next ? (
-            <p className="mt-4 text-center text-[11px] text-muted-foreground">
+            <p className="mt-4 text-center text-xs text-muted-foreground">
               Anda akan diarahkan ke halaman yang diminta setelah masuk.
             </p>
           ) : null}
 
           {isAuthConfigured ? (
-            <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
+            <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
               Kasir masuk dengan username, Owner dengan email. Hubungi admin jika lupa password.
             </p>
           ) : null}

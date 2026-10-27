@@ -27,19 +27,20 @@ export function ProductCard({ product }: { product: Product }) {
           src={product.image_url ?? "/images/placeholder.svg"}
           alt={displayName}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
         {isPromo && (
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white shadow">
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-white shadow">
             Promo
           </span>
         )}
         {quantity > 0 && (
-          <span className="animate-pop absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-stone-900 text-[11px] font-bold text-white shadow-md">
+          <span className="animate-pop absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-stone-900 text-xs font-bold text-white shadow-md">
             {quantity}
           </span>
         )}
-        <span className="absolute right-1.5 bottom-1.5 flex size-7 items-center justify-center rounded-full bg-white/95 text-orange-600 shadow-sm transition-transform group-active:scale-90">
+        <span className="absolute right-1.5 bottom-1.5 flex size-7 items-center justify-center rounded-full bg-white/95 text-orange-700 shadow-sm transition-transform group-active:scale-90">
           <Plus className="size-4" strokeWidth={2.6} />
         </span>
       </div>
@@ -48,7 +49,7 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-stone-800">
           {displayName}
         </p>
-        <p className="mt-auto pt-1 text-sm font-extrabold text-orange-600">
+        <p className="mt-auto pt-1 text-sm font-extrabold text-orange-700">
           {formatRupiah(product.price)}
         </p>
       </div>

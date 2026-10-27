@@ -9,6 +9,7 @@ import {
   SUPABASE_ANON_KEY,
   SUPABASE_URL,
 } from "@/lib/env";
+import { logWarn } from "@/lib/logging";
 import { buildCsp, createNonce } from "@/lib/security";
 import type { Database } from "@/lib/supabase/types";
 import type { UserRole } from "@/lib/types";
@@ -100,12 +101,34 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // `getClaims()` verifies the JWT locally against the cached JWKS (ES256),
+  // which avoids an Auth round trip on every navigation. If verification
+  // itself fails (cold cache + network error), fall back to `getUser()` so a
+  // JWKS hiccup cannot lock everyone out.
+  const { data, error } = await supabase.auth.getClaims();
+  let signedIn = Boolean(data?.claims?.sub);
+  let verified = signedIn;
 
-  if (!user && isProtected(pathname)) {
+  if (error) {
+    logWarn("auth.claims.failed", { error, path: pathname });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    signedIn = Boolean(user);
+    verified = false;
+  }
+
+  if (!signedIn && isProtected(pathname)) {
     return redirectTo("/login", pathname !== "/pos" ? { next: pathname } : undefined);
+  }
+
+  // Already signed in: skip the login screen. The root page resolves the
+  // profile role and forwards to the right home, so this stays a single
+  // local JWT check instead of a profile query on every /login render.
+  // Only do this for locally verified claims: the `getUser()` fallback means
+  // Auth and JWKS disagree, and redirecting then could bounce against `/`.
+  if (verified && pathname === "/login") {
+    return redirectTo("/");
   }
 
   return response;

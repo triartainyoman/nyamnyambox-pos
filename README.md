@@ -423,7 +423,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 1. Push the repository to GitHub/GitLab.
 2. Import the project into [Vercel](https://vercel.com/new).
 3. Add the same environment variables from `.env.local`.
-4. Deploy.
+4. Deploy. `vercel.json` pins functions to `sin1` (Singapore) so they sit next to the Supabase `ap-southeast-1` project; change it if the database moves. Verify with `curl -sI https://<domain>/login | grep -i x-vercel-id`.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
    `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, then `0005_daily_receipt_numbers.sql`.
@@ -492,7 +492,7 @@ proxy.ts                   # Next.js 16 auth middleware
 ## Known limitations
 
 - No direct thermal-printer/Web Bluetooth integration; printing uses the browser dialog.
-- Product images are URLs (seeded with local SVGs); there is no image upload bucket yet.
+- Product images are URLs (seeded with local SVGs); there is no image upload bucket yet. They render as plain lazy `<img>` inside a fixed aspect box, so the Next.js image optimizer is not used (owner-supplied hosts + SVG would require opening `remotePatterns`/`dangerouslyAllowSVG`).
 - Demo Mode is single-browser and not suitable for real operations.
 - Customer WhatsApp delivery is a `wa.me` deep link, not an automated messaging API.
 - Login throttling is in-memory per serverless instance; a distributed brute force across many instances is only slowed, not fully blocked.

@@ -28,7 +28,7 @@ export function QueryError({
       <AlertCircle className="size-8 text-red-500" />
       <div>
         <p className="text-sm font-semibold text-red-700">{title}</p>
-        <p className="mt-0.5 text-xs text-red-600/80">{friendlyError(error, fallback)}</p>
+        <p className="mt-0.5 text-xs text-red-700">{friendlyError(error, fallback)}</p>
       </div>
       {onRetry ? (
         <Button variant="outline" size="sm" onClick={onRetry}>

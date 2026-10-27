@@ -36,13 +36,13 @@ function ChartTooltip({
   const point = payload[0]?.payload;
   return (
     <div className="rounded-xl border border-border bg-card px-3 py-2 shadow-lg">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       <p className="text-sm font-extrabold text-stone-900">
         {formatRupiah(Number(payload[0]?.value ?? 0))}
       </p>
-      <p className="text-[10px] text-muted-foreground">{point?.orders ?? 0} transaksi</p>
+      <p className="text-xs text-muted-foreground">{point?.orders ?? 0} transaksi</p>
     </div>
   );
 }
