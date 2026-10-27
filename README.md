@@ -303,6 +303,7 @@ npm test        # unit tests (Vitest)
 npm run test:watch # unit tests in watch mode
 npm run test:e2e # E2E smoke tests (Playwright, demo mode)
 npm run test:rls # RLS/RPC regression test (PGlite)
+npm run qa:check # automated QA matrix (needs the demo server on :3210)
 npm run ci      # typecheck + lint + unit tests + build (what CI runs first)
 ```
 
@@ -330,10 +331,15 @@ The suite runs in CI on every push to `main` and every pull request via
 Covered flows:
 
 - cashier: login → add menu + notes → checkout (Takeaway/QRIS/phone) → receipt → edit the order in history → `Diedit` badge;
+- double submit: two clicks on "Konfirmasi & Proses Pesanan" in the same tick still create exactly one order (`e2e/checkout-guard.spec.ts`);
 - owner: email login → dashboard → add a menu → add a cashier;
 - negative: owner username login rejected; cashier redirected from owner pages; protected routes redirect to `/login` without a session.
 
 First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/ci.yml` and uploads traces/screenshots on failure.
+
+### Automated QA matrix
+
+`npm run qa:check` runs `scripts/qa-check.mjs` against the demo server and covers the automated half of `docs/QA_MATRIX.md`: layout at 360/390/768/1280 px (no horizontal overflow, no console errors), empty states, checkout/double-submit, receipt print widths for 58 mm and 80 mm, the `wa.me` link, Slow 3G, and keyboard/focus order. Screenshots land in `qa-artifacts/` (git-ignored). It exits non-zero on any finding, so it can be used as a manual gate. Physical checks (thermal printer, WhatsApp app, Safari iOS) stay in `docs/QA_MATRIX.md` §4.
 
 ### CI and branch protection
 
@@ -430,6 +436,8 @@ supabase/
   seed.sql                 # menu re-seed
   verify.sql               # production schema verification queries
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
+scripts/qa-check.mjs       # automated QA matrix (screenshots -> qa-artifacts/)
+docs/QA_MATRIX.md          # QA checklist: automated results + manual device items
 tests/unit/                # Vitest unit tests
 e2e/                       # Playwright smoke tests (demo mode)
 vitest.config.mts          # Vitest config (alias @, node/jsdom environments)

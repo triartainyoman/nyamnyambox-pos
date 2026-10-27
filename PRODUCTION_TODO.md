@@ -250,8 +250,8 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Branch protection **sudah aktif** di `main` (diverifikasi lewat `GET /branches/main/protection`): required checks ketiga job + `strict: true`, PR wajib sebelum merge (0 approval), `enforce_admins: true`, force-push dan delete branch diblokir.
 - Alur kerja baru: **push langsung ke `main` ditolak**. Setiap perubahan lewat branch → PR → check hijau → merge. `npm run ci` dijalankan lokal sebelum push untuk menangkap error lebih cepat.
 
-### [ ] T12 — Manual QA matrix
-**Prioritas:** P1 · **Butuh user:** ya (verifikasi perangkat)
+### [~] T12 — Manual QA matrix
+**Prioritas:** P1 · **Butuh user:** ya (verifikasi perangkat) · **Mulai:** 2026-10-27
 
 - Mobile 360/390px dan desktop: POS, cart, checkout, history, dashboard, products, employees.
 - Print 58mm & 80mm (Chrome/Safari), WhatsApp share, keyboard/a11y dasar.
@@ -259,6 +259,14 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Catat bug + perbaiki yang blocker.
 
 **Selesai jika:** checklist QA terisi dan tidak ada bug P0/P1 tersisa.
+
+**Hasil verifikasi (otomatis):**
+- Checklist lengkap ada di `docs/QA_MATRIX.md`; bagian otomatis dijalankan lewat `npm run qa:check` (`scripts/qa-check.mjs`) terhadap dev server demo di `127.0.0.1:3210`, screenshot tersimpan di `qa-artifacts/`.
+- 41 pemeriksaan lulus: layout 360/390/768/1280 untuk keenam halaman tanpa horizontal overflow dan tanpa error console; empty state riwayat & dashboard; checkout (termasuk double-submit); nota 58mm (197px) & 80mm (287px) beserta `@page size`; tautan `wa.me` berisi nomor nota; Slow 3G; urutan Tab dan focus ring form login.
+- **Bug P1 ditemukan & diperbaiki:** dua klik "Konfirmasi & Proses Pesanan" dalam tick yang sama membuat dua pesanan, karena tombol baru `disabled` setelah React re-render. Guard `useRef` ditambahkan di `components/pos/cart-sheet.tsx` dan pada simpan-edit di `components/history/order-detail-sheet.tsx`; regresi ditutup `e2e/checkout-guard.spec.ts` dan `npm run qa:check`.
+- Temuan performa production (function `iad1` vs Supabase Singapura) dicatat sebagai lingkup T15, bukan blocker T12.
+
+**Sisa (butuh Anda):** 10 item manual di `docs/QA_MATRIX.md` §4 — cetak 58/80mm, WhatsApp di HP, Safari iOS, layout HP nyata, double tap nyata, refresh saat checkout, dashboard, kelola menu/kasir, dan logout.
 
 ---
 

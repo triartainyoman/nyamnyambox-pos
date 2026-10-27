@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ClipboardList,
   Loader2,
@@ -70,6 +70,9 @@ export function OrderDetailSheet({
 
   const { data: products } = useProducts(true);
   const updateOrder = useUpdateOrder();
+  // `disabled` only applies after React re-renders; guard the same-tick double
+  // click so one save cannot run twice.
+  const savingRef = useRef(false);
   const [receiptSize, setReceiptSize] = useReceiptSize();
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -143,6 +146,8 @@ export function OrderDetailSheet({
       toast.error("Pesanan harus memiliki minimal satu item.");
       return;
     }
+    if (savingRef.current) return;
+    savingRef.current = true;
     try {
       const updated = await updateOrder.mutateAsync({
         order_id: order.id,
@@ -160,6 +165,8 @@ export function OrderDetailSheet({
       setEditing(false);
     } catch (error) {
       toast.error(friendlyError(error, "Gagal memperbarui transaksi"));
+    } finally {
+      savingRef.current = false;
     }
   }
 
