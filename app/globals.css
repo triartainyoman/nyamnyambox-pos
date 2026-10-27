@@ -195,6 +195,18 @@
     height: auto !important;
   }
 
+  /*
+   * `visibility` is a discrete-animatable property, so `transition-all`
+   * elements (buttons, cards) stay painted while the print snapshot is taken.
+   * Kill transitions/animations before hiding everything that is not a receipt.
+   */
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
   body * {
     visibility: hidden !important;
   }

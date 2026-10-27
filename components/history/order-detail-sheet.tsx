@@ -174,7 +174,7 @@ export function OrderDetailSheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent>
-        <SheetHeader>
+        <SheetHeader className="no-print">
           <SheetTitle className="flex flex-wrap items-center gap-2">
             {order.receipt_number}
             <PaymentBadge status={order.payment_status} />
@@ -185,7 +185,7 @@ export function OrderDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <SheetBody className="space-y-4">
+        <SheetBody className="no-print space-y-4">
           {!editing ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
@@ -357,7 +357,7 @@ export function OrderDetailSheet({
           )}
         </SheetBody>
 
-        <SheetFooter>
+        <SheetFooter className="no-print">
           {!editing ? (
             <div className="grid grid-cols-3 gap-2">
               <Button variant="outline" size="sm" onClick={() => window.print()}>

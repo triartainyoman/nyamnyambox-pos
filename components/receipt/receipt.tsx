@@ -96,7 +96,6 @@ export function Receipt({ order, className }: { order: Order; className?: string
       <div className="space-y-0.5 text-center text-[10px]">
         <p className="font-semibold">Pesanan sedang diproses 🍱</p>
         <p>Simpan nota ini sebagai bukti pembayaran.</p>
-        <p className="pt-1 text-[9px]">nyamnyambox.com</p>
       </div>
     </div>
   );

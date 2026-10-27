@@ -428,6 +428,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 6. Run all migrations against the production Supabase project, in order:
    `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, then `0005_daily_receipt_numbers.sql`.
 7. Run `supabase/verify.sql` and confirm every row shows `OK` (after the first Owner is promoted).
+8. Optional custom domain: Vercel → *Domains* → add the domain and point DNS, then update Supabase **Site URL / Redirect URLs**. The current production runs on the `*.vercel.app` subdomain with automatic HTTPS; no code change is needed when a domain is added. Rollback steps are in `docs/RUNBOOK.md` §5.5.
 
 ---
 

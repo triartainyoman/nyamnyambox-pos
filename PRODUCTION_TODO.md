@@ -333,14 +333,15 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - **Navigasi**: `app/(app)/loading.tsx` (skeleton dengan `role="status"`) untuk transisi antar-halaman; `useOrders` memakai `keepPreviousData` agar ganti tanggal tidak berkedip kosong.
 - **Gambar/font/bundle**: foto menu tetap `<img loading="lazy" decoding="async">` di dalam kotak `aspect-square` (CLS 0). `next/image` sengaja tidak dipakai: URL gambar diisi Owner (host bebas) dan placeholder berupa SVG, sehingga optimizer harus dibuka untuk semua host atau `dangerouslyAllowSVG` — risiko lebih besar daripada manfaatnya untuk 8–20 gambar menu. Font sudah self-hosted `next/font` (2 woff2, preload) dan tidak ada font pihak ketiga.
 - **Uji**: 181 unit test (5 baru untuk `fallbackProfileFromIdentity`), 13 E2E, `npm run qa:check` **41/41** (termasuk tab order & ring fokus, tanpa overflow horizontal), `npm run ci` hijau.
+- **Verifikasi production** (`1b2fa5f`): `x-vercel-id` = `hkg1::sin1::…` (function benar-benar di Singapura). Lighthouse 12 mobile di production: `/login` **99 / 100 / 100**, `/pos` **100 / 100 / 100**, `/dashboard` **100 / 100 / 100**; Speed Index 1.1 / 1.3 / 1.7 s, CLS ≈ 0, tanpa error console. Health check melaporkan `commit: 1b2fa5f` dengan latensi DB 839 → 115 ms dan auth 1005 → 118 ms (total 139 ms).
 
 
 ---
 
 ## Fase 4 — Launch & handover
 
-### [ ] T16 — Deploy Vercel + domain
-**Prioritas:** P0 · **Butuh user:** ya (akun/domain)
+### [~] T16 — Deploy Vercel + domain
+**Prioritas:** P0 · **Butuh user:** ya (akun/domain) · **Selesai sebagian:** 2026-10-27
 
 - Import repo, set env production, deploy.
 - Set custom domain + HTTPS.
@@ -349,6 +350,16 @@ Status: `[ ]` belum, `[~]` sedang dikerjakan, `[x]` selesai.
 - Siapkan rollback (deployment sebelumnya + restore DB).
 
 **Selesai jika:** domain production hidup dan smoke test lulus.
+
+**Hasil:**
+- **Production hidup** di `https://nyamnyambox-pos.vercel.app` (Vercel, function `sin1`), terhubung ke project Supabase `pnclljapcuobhskqrcux` (`ap-southeast-1`). Env production diisi dari dashboard Vercel; build tanpa env Supabase gagal *fail-safe* (bukan diam-diam masuk demo mode).
+- **Site URL & Redirect URLs** Supabase diarahkan ke domain production; login owner (email) dan kasir (username) berjalan di production.
+- **Smoke test production** (commit `1b2fa5f`, Playwright 390×844, 2026-10-27): login owner → dashboard tampil (Omzet Hari Ini) → buat kasir sementara lewat UI → logout → login kasir pakai username → tambah menu → checkout → nota `NYB-20261027-0002` terbit → layout cetak 58 mm tampil → `/history` memuat order → logout → login owner ulang. **0 error console, 0 response ≥ 400.** Data uji (order `NYB-20261027-0002` + akun `smoke10271502`) sudah dihapus dari production setelah pengujian.
+- **Perbaikan dari smoke test**:
+  - Footer nama website `nyamnyambox.com` dihapus dari struk thermal (permintaan owner).
+  - Artefak cetak: tombol/step di sheet detail riwayat ikut tercetak karena `transition-all` menahan `visibility` saat snapshot print. `@media print` sekarang mematikan `transition`/`animation` dan `SheetHeader`/`SheetBody`/`SheetFooter` diberi `no-print`, sehingga hanya salinan struk (`hidden print:block`) yang tampil.
+- **Rollback**: Vercel *Deployments* → pilih deployment hijau sebelumnya → **Promote to Production** (instan, tanpa rebuild); DB memakai dump mingguan `backup.yml` + prosedur `docs/RUNBOOK.md` §3.7. Langkah lengkap ada di `docs/RUNBOOK.md` §5.5.
+- **Domain kustom: ditunda.** Owner belum punya domain, jadi T16 selesai dengan subdomain `*.vercel.app` (HTTPS otomatis). Saat domain siap: tambahkan di Vercel → *Domains*, arahkan DNS, lalu perbarui Site URL/Redirect URLs di Supabase — tanpa perubahan kode.
 
 ### [ ] T17 — Handover & SOP
 **Prioritas:** P1 · **Butuh user:** ya (review)

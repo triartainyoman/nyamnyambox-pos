@@ -6,7 +6,7 @@ bagian manual butuh perangkat nyata (printer thermal, HP, Safari iOS).
 - **Terakhir dijalankan:** 2026-10-27
 - **Lingkungan otomatis:** Chromium (Playwright), dev server demo mode `127.0.0.1:3210`
 - **Data:** demo (localStorage), bukan project Supabase production
-- **Pipeline lokal:** `npm run ci` (typecheck, lint, 109 unit test, production build) dan `npm run test:e2e` (6 skenario) hijau pada commit yang sama.
+- **Pipeline lokal:** `npm run ci` (typecheck, lint, 181 unit test, production build) dan `npm run test:e2e` (13 skenario) hijau pada commit yang sama.
 
 ## Menjalankan ulang bagian otomatis
 
@@ -51,6 +51,7 @@ Screenshot: `qa-artifacts/{mobile-360,mobile-390,tablet-768,desktop-1280}/*.png`
 | Nota 80mm | ✅ lebar 287px, `@page size: 80mm auto` |
 | Tautan WhatsApp berisi nomor nota | ✅ `https://wa.me/?text=…` |
 | Edit transaksi di riwayat (status, catatan, nomor WA) | ✅ (dijaga E2E `e2e/cashier.spec.ts`) |
+| Cetak dari sheet detail riwayat: hanya struk yang tampil, tanpa tombol/kartu/`nyamnyambox.com` | ✅ (dijaga E2E `e2e/cashier.spec.ts`, media print) |
 
 ## 3. Kondisi khusus — otomatis ✅
 
@@ -84,6 +85,8 @@ Centang setelah dicoba. Kalau ada yang gagal, catat langkah + screenshot.
 | # | Prioritas | Temuan | Perbaikan |
 | --- | --- | --- | --- |
 | Q1 | P1 | Dua klik "Konfirmasi & Proses Pesanan" dalam tick yang sama membuat **dua pesanan** (tombol baru disabled setelah React re-render). | Guard `useRef` di `components/pos/cart-sheet.tsx`; regresi E2E `e2e/checkout-guard.spec.ts`. Guard yang sama ditambahkan ke simpan-edit di `components/history/order-detail-sheet.tsx`. |
+| Q2 | P2 | Saat mencetak dari sheet detail riwayat, tombol "Cetak/Edit/Kirim WA" dan kartu di belakangnya ikut tercetak. Penyebab: `transition-all` menahan properti diskret `visibility` selama transisi, jadi elemen masih `visible` ketika snapshot print diambil. | `@media print` mematikan `transition`/`animation` untuk semua elemen, ditambah `no-print` eksplisit di `SheetHeader`/`SheetBody`/`SheetFooter`. Regresi dicek di `e2e/cashier.spec.ts` (media print: 0 elemen terlihat di luar struk). |
+| Q3 | P3 | Footer struk thermal mencetak `nyamnyambox.com` (nama website, bukan identitas toko). | Dihapus dari `components/receipt/receipt.tsx` (permintaan Owner, 2026-10-27). |
 
 ## 6. Catatan terbuka (bukan blocker T12)
 

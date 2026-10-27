@@ -359,6 +359,32 @@ Nomor nota dibuat RPC `next_receipt_number` per hari bisnis Jakarta
 | Kunci Supabase | `~/.nyb-supabase-keys.json` (lokal) |
 | Secret backup | GitHub Actions secret `SUPABASE_DB_URL` |
 
+### 5.5 Rollback rilis
+
+Dua lapis, pakai sesuai jenis masalah:
+
+**A. Kode salah / build rusak (paling sering) — ±1 menit, tanpa rebuild**
+
+1. Buka Vercel → project `nyamnyambox-pos` → tab *Deployments*.
+2. Cari deployment hijau terakhir (badge *Ready*, commit yang dikenal).
+3. Menu `⋯` → **Promote to Production**.
+4. Verifikasi: `curl -s https://nyamnyambox-pos.vercel.app/api/health`
+   → `commit` harus sama dengan commit deployment yang dipromosikan.
+5. Catat insidennya di laporan; perbaiki di branch lalu PR seperti biasa.
+
+**B. Data rusak / migrasi salah — di luar jam operasional**
+
+1. Hentikan pemakaian: minta kasir berhenti membuat order.
+2. Ambil dump terbaru dari artifact `backup.yml` (atau jalankan perintah di
+   §3.3) dan simpan salinan sebelum menyentuh apa pun.
+3. Ikuti `docs/RUNBOOK.md` §3.7 untuk restore ke production.
+4. Jalankan `supabase/verify.sql` — semua baris harus OK.
+5. Cek `orders`/`order_items` terakhir, lalu `curl /api/health`.
+6. Baru izinkan kasir kembali; catat di §6.
+
+**Yang tidak boleh**: force-push `main`, menghapus deployment lama sebelum yakin
+deployment baru sehat, atau restore DB tanpa dump pengaman.
+
 ---
 
 ## 6. Log drill restore
