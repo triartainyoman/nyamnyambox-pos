@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+
+import { reportClientError } from "@/lib/client-logging";
 import { friendlyError } from "@/lib/errors";
 
 /**
@@ -14,6 +17,10 @@ export default function GlobalError({
   error: unknown;
   retry: () => void;
 }) {
+  useEffect(() => {
+    reportClientError(error, "global-error");
+  }, [error]);
+
   return (
     <html lang="id">
       <body

@@ -17,7 +17,9 @@
     "test:e2e:ui": "playwright test --ui",
     "ci": "npm run typecheck && npm run lint && npm test && npm run build",
     "test:rls": "node scripts/test-rls.mjs",
-    "qa:check": "node scripts/qa-check.mjs"
+    "qa:check": "node scripts/qa-check.mjs",
+    "export:orders": "node scripts/export-orders.mjs",
+    "drill:restore": "node scripts/restore-drill.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.2.1",

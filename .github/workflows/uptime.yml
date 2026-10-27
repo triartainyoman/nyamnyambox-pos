@@ -1,0 +1,54 @@
+name: Uptime check
+
+# Pings the production health endpoint. A failed run notifies the repository
+# owner by e-mail (GitHub's default for scheduled workflows).
+#
+# Limitation: GitHub disables scheduled workflows after 60 days without
+# repository activity, and cron runs can be delayed by several minutes under
+# load. For a real pager, point an external monitor (UptimeRobot, Better Stack)
+# at the same URL — see docs/RUNBOOK.md.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime-check
+  cancel-in-progress: false
+
+jobs:
+  health:
+    name: GET /api/health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check production health
+        env:
+          # Override with a repository variable if the production URL changes.
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://nyamnyambox-pos.vercel.app/api/health' }}
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+
+          status="$(curl -sS -o "$body" -w '%{http_code}' \
+            --max-time 20 --retry 2 --retry-delay 5 "$HEALTH_URL" || true)"
+
+          echo "HTTP $status"
+          cat "$body"
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Health check gagal: HTTP $status dari $HEALTH_URL"
+            exit 1
+          fi
+
+          if ! grep -q '"status":"ok"' "$body"; then
+            echo "::error::Health check mengembalikan status selain ok"
+            exit 1
+          fi
+
+          echo "Health check OK"

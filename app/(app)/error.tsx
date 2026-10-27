@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { reportClientError } from "@/lib/client-logging";
 import { friendlyError } from "@/lib/errors";
 
 /**
@@ -20,7 +21,7 @@ export default function AppError({
   retry: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    reportClientError(error, "error-boundary");
   }, [error]);
 
   return (
