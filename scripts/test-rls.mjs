@@ -110,6 +110,36 @@ async function main() {
   await db.exec(migration("0004_profile_privacy.sql"));
   await db.exec(migration("0005_daily_receipt_numbers.sql"));
 
+  // Minimal Supabase Storage surface used by 0006. Supabase provides these in
+  // the `storage` schema; PGlite has none, so mirror the columns the migration
+  // touches plus the grants the platform gives to each role.
+  await db.exec(`
+    create schema storage;
+
+    create table storage.buckets (
+      id text primary key,
+      name text not null,
+      public boolean not null default false,
+      file_size_limit bigint,
+      allowed_mime_types text[]
+    );
+
+    create table storage.objects (
+      id uuid primary key default gen_random_uuid(),
+      bucket_id text not null references storage.buckets (id),
+      name text not null,
+      owner uuid
+    );
+
+    alter table storage.objects enable row level security;
+
+    grant usage on schema storage to anon, authenticated;
+    grant select on storage.objects to anon, authenticated;
+    grant insert, update, delete on storage.objects to authenticated;
+  `);
+
+  await db.exec(migration("0006_product_images_storage.sql"));
+
   // --------------------------------------------------------------------------
   // Fixtures
   // --------------------------------------------------------------------------
@@ -633,6 +663,70 @@ async function main() {
     );
   }
   log("all SECURITY DEFINER functions pin search_path");
+
+  // --------------------------------------------------------------------------
+  // Product image storage (0006)
+  // --------------------------------------------------------------------------
+  const bucket = await db.query(
+    `select public, file_size_limit, allowed_mime_types
+     from storage.buckets
+     where id = 'product-images'`,
+  );
+  assert.equal(bucket.rows.length, 1);
+  assert.equal(bucket.rows[0].public, true);
+  assert.equal(Number(bucket.rows[0].file_size_limit), 5 * 1024 * 1024);
+  assert.deepEqual(
+    [...bucket.rows[0].allowed_mime_types].sort(),
+    ["image/avif", "image/jpeg", "image/png", "image/webp"],
+  );
+  log("product-images bucket is public with a 5 MB MIME allow-list");
+
+  await db.query(`insert into storage.buckets (id, name) values ('other-bucket', 'other-bucket')`);
+  await db.query(
+    `insert into storage.objects (bucket_id, name) values ('other-bucket', 'private.webp')`,
+  );
+
+  await runAs(
+    "authenticated",
+    OWNER_ID,
+    () =>
+      db.query(
+        `insert into storage.objects (bucket_id, name) values ('product-images', 'owner.webp')`,
+      ),
+    { commit: true },
+  );
+  log("owner can upload a product image");
+
+  await expectError(
+    "cashier cannot upload a product image",
+    () =>
+      runAs("authenticated", CASHIER_ID, () =>
+        db.query(
+          `insert into storage.objects (bucket_id, name) values ('product-images', 'cashier.webp')`,
+        ),
+      ),
+    /row-level security/i,
+  );
+
+  await expectError(
+    "owner cannot write to another bucket",
+    () =>
+      runAs("authenticated", OWNER_ID, () =>
+        db.query(
+          `insert into storage.objects (bucket_id, name) values ('other-bucket', 'sneaky.webp')`,
+        ),
+      ),
+    /row-level security/i,
+  );
+
+  const anonObjects = await runAs("anon", null, () =>
+    db.query(`select bucket_id, name from storage.objects order by name`),
+  );
+  assert.deepEqual(
+    anonObjects.rows.map((row) => `${row.bucket_id}:${row.name}`),
+    ["product-images:owner.webp"],
+  );
+  log("anon can read product images but not other buckets");
 
   console.log("\nAll RLS/RPC checks passed.\n");
 }

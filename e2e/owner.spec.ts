@@ -41,3 +41,40 @@ test("owner melihat dashboard, menambah menu, dan menambah kasir", async ({ page
   await expect(page.getByText("E2E Barista", { exact: true })).toBeVisible();
   await expect(page.getByText("e2ebarista", { exact: true })).toBeVisible();
 });
+
+test("owner memakai URL atau preset gambar saat upload dinonaktifkan di demo", async ({ page }) => {
+  await loginAsOwner(page);
+  await page.getByRole("link", { name: "Menu & Promo" }).click();
+  await page.getByRole("button", { name: "Tambah Menu", exact: true }).click();
+
+  const productDialog = page.getByRole("dialog", { name: "Tambah Menu" });
+  await expect(productDialog).toBeVisible();
+
+  // Demo mode has no Supabase Storage: upload is disabled and explained.
+  await expect(
+    productDialog.getByText(/Upload foto hanya tersedia di mode production/),
+  ).toBeVisible();
+  await expect(
+    productDialog.getByRole("button", { name: "Pilih Foto", exact: true }),
+  ).toBeDisabled();
+
+  // The URL input and the built-in presets stay usable as a fallback.
+  const imageUrl = productDialog.getByLabel("URL Gambar (opsional)");
+  await expect(imageUrl).toHaveValue("");
+
+  await productDialog.getByRole("button", { name: "Thai Basil" }).click();
+  await expect(imageUrl).toHaveValue("/images/thai-basil.svg");
+
+  await imageUrl.fill("https://example.com/foto-menu.webp");
+  await expect(imageUrl).toHaveValue("https://example.com/foto-menu.webp");
+
+  await productDialog.getByLabel("Nama Menu").fill("E2E Menu Foto");
+  await productDialog.getByLabel("Harga (Rp)").fill("21000");
+  await productDialog.getByRole("button", { name: "Tambah Menu", exact: true }).click();
+
+  await expect(page.getByText("Menu baru berhasil ditambahkan")).toBeVisible();
+  await expect(page.getByRole("img", { name: "E2E Menu Foto" })).toHaveAttribute(
+    "src",
+    "https://example.com/foto-menu.webp",
+  );
+});

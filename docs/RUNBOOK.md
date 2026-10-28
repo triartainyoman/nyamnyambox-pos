@@ -270,6 +270,7 @@ Catat hasilnya di tabel drill di bagian 6.
 - Simpan 3 backup bulanan terakhir + 1 backup akhir tahun.
 - Simpan juga ekspor CSV bulanan (bagian 4) bersama backup — kalau schema
   berubah, CSV tetap terbaca.
+- Simpan foto menu asli (bagian 3.8). Foto tidak ikut `pg_dump`.
 
 ### 3.7 Kalau data hilang / rusak
 
@@ -278,6 +279,50 @@ Catat hasilnya di tabel drill di bagian 6.
 | Order hari ini hilang | Cek `/history` sebagai Owner (kasir hanya melihat hari ini). Query `select * from orders where created_at >= now() - interval '1 day'`. |
 | Tabel terhapus / data korup | Restore dump terakhir ke **project staging**, verifikasi, lalu salin data yang hilang dengan `INSERT … SELECT`. Jangan restore langsung ke production kecuali terpaksa. |
 | Butuh rollback total | Restore dump ke production di luar jam operasional, lalu jalankan `supabase/verify.sql`. |
+
+### 3.8 Backup foto menu (Supabase Storage)
+
+Sejak Phase 2, foto menu disimpan di bucket publik `product-images`, **bukan**
+di Postgres. `pg_dump --schema=public` tidak menyertakan file Storage, jadi
+dump mingguan hanya memulihkan *URL*-nya; file gambarnya bisa hilang kalau
+bucket terhapus.
+
+| Cara | Kapan dipakai |
+| --- | --- |
+| Simpan file asli di HP / kartu SD / folder arsip | Selalu — cara termurah, dan foto asli bisa diunggah ulang |
+| Dashboard Supabase → *Storage* → unduh objek | Sekali-sekali atau sebelum perubahan besar |
+| Supabase CLI / S3 client dengan S3 access keys | Kalau foto sudah banyak dan ingin otomatis |
+
+Saat restore: pulihkan dump Postgres lebih dulu, lalu unggah ulang foto.
+Nama objek tersimpan di kolom `products.image_url`; kalau nama file berubah,
+perbarui URL-nya:
+
+```sql
+update public.products set image_url = '<public-url-baru>' where id = '<id>';
+```
+
+Foto yang hilang tidak memblokir checkout. Produk dengan `image_url` kosong
+memakai `/images/placeholder.svg`; produk yang URL-nya menunjuk objek hilang
+akan menampilkan gambar rusak sampai foto diunggah ulang.
+
+Objek bisa menjadi yatim kalau Owner mengunggah foto lalu menutup dialog tanpa
+menyimpan. Cek dan hapus lewat SQL Editor (tinjau daftarnya dulu):
+
+```sql
+select o.name, o.created_at
+from storage.objects o
+left join public.products p
+  on p.image_url like '%' || o.name
+where o.bucket_id = 'product-images'
+  and p.id is null;
+
+-- setelah yakin:
+delete from storage.objects o
+where o.bucket_id = 'product-images'
+  and not exists (
+    select 1 from public.products p where p.image_url like '%' || o.name
+  );
+```
 
 ---
 
