@@ -56,6 +56,14 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 - Deactivate/reactivate accounts. Deactivated staff cannot sign in or query data.
 - Roles are assigned server-side, never trusted from the client.
 
+### Account Security (`/settings/security`, Owner/Developer only)
+- Owners and Developers can change their own password from the app — no more SQL editor round trip.
+- The current password is re-verified before the change, so a stolen session alone cannot lock the real owner out.
+- New password must be at least 8 characters, differ from the current one, and match its confirmation.
+- Five wrong current-password attempts per user + IP are allowed per 15-minute window.
+- Cashiers are redirected to `/pos`; they never see the page or the form.
+- Demo mode keeps the password fixed, so the form is disabled there with an explanation.
+
 ### Auth & RBAC
 - **Owner** signs in with **email + password** (username login is blocked for owner roles).
 - **Cashier** signs in with **username + password** (or email as a fallback).
@@ -260,6 +268,7 @@ fi
 | `/dashboard` | ✅ | Redirected to `/pos` |
 | `/products` | ✅ | Redirected to `/pos` |
 | `/employees` | ✅ | Redirected to `/pos` |
+| `/settings/security` | ✅ | Redirected to `/pos` |
 
 After login, Owner/Master Admin/Developer land on `/dashboard`; cashiers land on `/pos`.
 
@@ -310,7 +319,7 @@ The developer signs in with **email + password**, like an Owner. To revoke acces
 
 - **Headers.** `next.config.ts` adds `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` to every response (see `lib/security.ts`).
 - **CSP.** `proxy.ts` builds a per-request policy with a fresh nonce. Production uses `script-src 'self' 'nonce-…' 'strict-dynamic'`; Next.js reads the nonce from the request header and attaches it to its own scripts. `style-src` keeps `'unsafe-inline'` because Radix and Recharts set inline `style` attributes, and `connect-src` is limited to the app plus the Supabase REST/realtime origins. Development uses a looser policy so Turbopack HMR keeps working. `upgrade-insecure-requests` is only sent when the document itself is HTTPS.
-- **Login throttling.** `lib/rate-limit.ts` counts failed logins per identifier (5) and per IP (20) in a fixed 15-minute window; a successful login clears both. Blocked attempts get a generic retry message and never reach Supabase Auth. The counter is in-memory (per serverless instance) — swap it for Upstash if a shared counter is ever needed.
+- **Login throttling.** `lib/rate-limit.ts` counts failed logins per identifier (5) and per IP (20) in a fixed 15-minute window; a successful login clears both. Blocked attempts get a generic retry message and never reach Supabase Auth. The same module also caps wrong current-password attempts on `/settings/security` at 5 per user + IP / 15 minutes. The counter is in-memory (per serverless instance) — swap it for Upstash if a shared counter is ever needed.
 - **Secrets.** Only `NEXT_PUBLIC_*` values reach the browser; the service-role key stays server-side and is never logged. `npm audit` reports zero known vulnerabilities.
 
 To check the headers yourself:
@@ -373,6 +382,7 @@ Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
 - cart quantities, notes, totals, and persistence;
 - WhatsApp receipt text and `wa.me` phone normalization;
 - error mapping/whitelisting (raw Postgres details never leak);
+- password-change rules (minimum length, different from current, confirmation);
 - role landing paths and channel/payment labels.
 
 The suite runs in CI on every push to `main` and every pull request via
@@ -386,14 +396,14 @@ Covered flows:
 
 - cashier: login → add menu + notes → checkout (Takeaway/QRIS/phone) → receipt → edit the order in history → `Diedit` badge;
 - double submit: two clicks on "Konfirmasi & Proses Pesanan" in the same tick still create exactly one order (`e2e/checkout-guard.spec.ts`);
-- owner: email login → dashboard → add a menu → add a cashier;
-- negative: owner username login rejected; cashier redirected from owner pages; protected routes redirect to `/login` without a session.
+- owner: email login → dashboard → add a menu → add a cashier → open **Keamanan Akun**;
+- negative: owner username login rejected; cashier redirected from owner pages (including `/settings/security`); protected routes redirect to `/login` without a session.
 
 First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/ci.yml` and uploads traces/screenshots on failure.
 
 ### Automated QA matrix
 
-`npm run qa:check` runs `scripts/qa-check.mjs` against the demo server and covers the automated half of `docs/QA_MATRIX.md`: layout at 360/390/768/1280 px (no horizontal overflow, no console errors), empty states, checkout/double-submit, receipt print widths for 58 mm and 80 mm, the `wa.me` link, Slow 3G, and keyboard/focus order. Screenshots land in `qa-artifacts/` (git-ignored). It exits non-zero on any finding, so it can be used as a manual gate. Physical checks (thermal printer, WhatsApp app, Safari iOS) stay in `docs/QA_MATRIX.md` §4.
+`npm run qa:check` runs `scripts/qa-check.mjs` against the demo server and covers the automated half of `docs/QA_MATRIX.md`: layout at seven widths (360/390/768/820/1024/1180/1280 px, no horizontal overflow, no console errors), empty states, checkout/double-submit, receipt print widths for 58 mm and 80 mm, the `wa.me` link, Slow 3G, and keyboard/focus order (81 checks). Screenshots land in `qa-artifacts/` (git-ignored). It exits non-zero on any finding, so it can be used as a manual gate. Physical checks (thermal printer, WhatsApp app, Safari iOS) stay in `docs/QA_MATRIX.md` §4.
 
 ### CI and branch protection
 

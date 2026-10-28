@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ReceiptText,
+  ShieldCheck,
   ShoppingBag,
   TriangleAlert,
   Users,
@@ -26,6 +27,8 @@ interface NavItem {
   shortLabel: string;
   icon: LucideIcon;
   ownerOnly?: boolean;
+  /** Shown in the desktop rail only; phones reach it from the Employees page. */
+  desktopOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -34,12 +37,14 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard Analitik", shortLabel: "Dashboard", icon: LayoutDashboard, ownerOnly: true },
   { href: "/products", label: "Menu & Promo", shortLabel: "Menu", icon: UtensilsCrossed, ownerOnly: true },
   { href: "/employees", label: "Kelola Karyawan", shortLabel: "Tim", icon: Users, ownerOnly: true },
+  { href: "/settings/security", label: "Keamanan Akun", shortLabel: "Akun", icon: ShieldCheck, ownerOnly: true, desktopOnly: true },
 ];
 
 export function AppShell({ profile, children }: { profile: Profile; children: React.ReactNode }) {
   const pathname = usePathname();
   const owner = isOwnerRole(profile.role);
   const items = NAV_ITEMS.filter((item) => !item.ownerOnly || owner);
+  const mobileItems = items.filter((item) => !item.desktopOnly);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -144,9 +149,9 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
       >
         <div
           className="grid"
-          style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}
         >
-          {items.map((item) => {
+          {mobileItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link

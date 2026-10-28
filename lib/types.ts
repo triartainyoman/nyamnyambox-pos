@@ -115,4 +115,4 @@ export interface DashboardData extends DashboardSummary {
   monthOrders: number;
 }
 
-export type ActionResult = { error?: string } | undefined;
+export type ActionResult = { error?: string; success?: string } | undefined;

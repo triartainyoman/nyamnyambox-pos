@@ -200,6 +200,19 @@ ke repo.
 
 ## 8. Keamanan akun
 
+### Mengganti password sendiri
+
+1. Buka **Keamanan Akun** dari menu samping (desktop) atau dari tombol di
+   halaman **Kelola Karyawan** (HP).
+2. Isi **Password saat ini**, lalu **Password baru** (minimal 8 karakter) dan
+   ulangi di kolom konfirmasi.
+3. Ketuk **Simpan Password Baru**. Password baru langsung berlaku pada login
+   berikutnya.
+
+Halaman ini hanya untuk Owner dan Developer. Kasir tidak bisa mengganti
+password sendiri; minta Owner mereset lewat dashboard Supabase (atau lewat
+menu Kelola Karyawan setelah fitur reset tersedia).
+
 - Pakai password manager; jangan pakai password yang sama dengan akun lain.
 - Jangan pernah mengirim password lewat chat grup; gunakan pesan pribadi.
 - Aktifkan 2FA di akun **Supabase**, **Vercel**, dan **GitHub** — tiga akun ini
