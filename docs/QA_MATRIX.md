@@ -79,6 +79,7 @@ Centang setelah dicoba. Kalau ada yang gagal, catat langkah + screenshot.
 | M8 | Dashboard Owner menampilkan grafik + top menu dengan data hari ini | desktop | ⬜ |
 | M9 | Tambah/edit menu dan tambah kasir, lalu login dengan akun baru | desktop | ⬜ |
 | M10 | Logout lalu buka `/pos` langsung → dialihkan ke login | HP/desktop | ⬜ |
+| M11 | Upload foto menu dari galeri HP (JPG/PNG), ganti foto, lalu pastikan foto baru tampil di POS dan objek lama hilang dari bucket `product-images` | HP + desktop | ⬜ |
 
 ## 5. Bug yang ditemukan & diperbaiki
 

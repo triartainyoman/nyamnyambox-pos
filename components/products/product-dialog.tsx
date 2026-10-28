@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { ProductImageField } from "@/components/products/product-image-field";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,19 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { friendlyError } from "@/lib/errors";
 import { useCreateProduct, useUpdateProduct } from "@/lib/hooks/use-products";
+import { deleteProductImageByUrl } from "@/lib/storage/product-images";
 import type { Product } from "@/lib/types";
-import { cn, formatRupiah } from "@/lib/utils";
-
-const IMAGE_PRESETS = [
-  { url: "/images/thai-basil.svg", label: "Thai Basil" },
-  { url: "/images/salted-egg.svg", label: "Salted Egg" },
-  { url: "/images/bbq-cheese.svg", label: "BBQ Cheese" },
-  { url: "/images/mac-cheese.svg", label: "Mac & Cheese" },
-  { url: "/images/kentang-sosis.svg", label: "Kentang" },
-  { url: "/images/popcorn.svg", label: "Popcorn" },
-  { url: "/images/es-teh.svg", label: "Es Teh" },
-  { url: "/images/promo-thai-basil.svg", label: "Promo" },
-];
+import { formatRupiah } from "@/lib/utils";
 
 export function ProductDialog({
   open,
@@ -78,7 +69,12 @@ export function ProductDialog({
 
     try {
       if (product) {
+        const previousImage = product.image_url ?? "";
         await updateProduct.mutateAsync({ id: product.id, input: payload });
+        if (previousImage && previousImage !== (payload.image_url ?? "")) {
+          // Best-effort: a stale object is harmless, a failed save is not.
+          void deleteProductImageByUrl(previousImage);
+        }
         toast.success("Menu berhasil diperbarui");
       } else {
         await createProduct.mutateAsync(payload);
@@ -106,50 +102,7 @@ export function ProductDialog({
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <DialogBody className="space-y-4">
-            <div className="flex gap-3">
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border bg-orange-50">
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center gap-1 text-stone-400">
-                    <ImageIcon className="size-5" />
-                    <span className="text-xs">Tanpa gambar</span>
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <Label htmlFor="product-image">URL Gambar</Label>
-                <Input
-                  id="product-image"
-                  value={imageUrl}
-                  onChange={(event) => setImageUrl(event.target.value)}
-                  placeholder="/images/menu.svg"
-                  className="h-10"
-                />
-                <div className="mt-2 flex gap-1 overflow-x-auto pb-1">
-                  {IMAGE_PRESETS.map((preset) => (
-                    <button
-                      key={preset.url}
-                      type="button"
-                      title={preset.label}
-                      onClick={() => setImageUrl(preset.url)}
-                      className={cn(
-                        "size-8 shrink-0 overflow-hidden rounded-lg border-2",
-                        imageUrl === preset.url ? "border-orange-500" : "border-transparent",
-                      )}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={preset.url}
-                        alt={preset.label}
-                        className="h-full w-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ProductImageField value={imageUrl} onChange={setImageUrl} />
 
             <div>
               <Label htmlFor="product-name">Nama Menu</Label>

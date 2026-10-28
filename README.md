@@ -39,7 +39,8 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 - Top-selling products.
 
 ### Menu Management (`/products`, Owner only)
-- Create and edit products: name, price, image URL, active/inactive.
+- Create and edit products: name, price, image (upload or URL), active/inactive.
+- Photos upload directly from the browser to Supabase Storage, resized to WebP ≤1200 px before sending (5 MB cap, JPG/PNG/WebP/AVIF only). Replacing a photo deletes the previous object after the menu saves.
 - Inactive products disappear from the POS menu but remain in historical orders.
 - Promo items managed as regular products with a `[PROMO]` name prefix.
 
@@ -122,6 +123,7 @@ supabase/migrations/0002_username_login.sql
 supabase/migrations/0003_harden_order_writes.sql
 supabase/migrations/0004_profile_privacy.sql
 supabase/migrations/0005_daily_receipt_numbers.sql
+supabase/migrations/0006_product_images_storage.sql
 ```
 
 `0001_init.sql` creates:
@@ -141,9 +143,11 @@ supabase/migrations/0005_daily_receipt_numbers.sql
 
 `0005_daily_receipt_numbers.sql` replaces the global receipt sequence with a per-business-day `receipt_counters` table. Numbers restart at `0001` every Jakarta day and are allocated atomically with `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
 
+`0006_product_images_storage.sql` creates the public `product-images` bucket (5 MB, JPG/PNG/WebP/AVIF only) and four Storage policies: public read, owner-only insert/update/delete. SVG is rejected on purpose because it is active content.
+
 `supabase/seed.sql` can be run separately to re-seed the menu.
 
-After the migrations, run `supabase/verify.sql` in the SQL Editor. Every row should show `OK`. The `active owner exists` check is expected to show `FAIL` until you promote the first Owner in step 4.
+After the migrations, run `supabase/verify.sql` in the SQL Editor. Every row should show `OK`. The `active owner exists` check is expected to show `FAIL` until you promote the first Owner in step 4. Also run `supabase/verify-storage.sql` to check the bucket and its policies (it is separate because the restore drill has no `storage` schema).
 
 ### 3. Configure environment variables
 
@@ -426,8 +430,8 @@ This is a fast local check. It does not replace testing against a real Supabase 
 4. Deploy. `vercel.json` pins functions to `sin1` (Singapore) so they sit next to the Supabase `ap-southeast-1` project; change it if the database moves. Verify with `curl -sI https://<domain>/login | grep -i x-vercel-id`.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
-   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, then `0005_daily_receipt_numbers.sql`.
-7. Run `supabase/verify.sql` and confirm every row shows `OK` (after the first Owner is promoted).
+   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, `0005_daily_receipt_numbers.sql`, then `0006_product_images_storage.sql`.
+7. Run `supabase/verify.sql` and confirm every row shows `OK` (after the first Owner is promoted), then `supabase/verify-storage.sql` for the `product-images` bucket.
 8. Optional custom domain: Vercel → *Domains* → add the domain and point DNS, then update Supabase **Site URL / Redirect URLs**. The current production runs on the `*.vercel.app` subdomain with automatic HTTPS; no code change is needed when a domain is added. Rollback steps are in `docs/RUNBOOK.md` §5.5.
 
 ---
@@ -470,8 +474,10 @@ supabase/
   migrations/0003_harden_order_writes.sql # RPC-only order writes, pinned search_path
   migrations/0004_profile_privacy.sql # self/owner profile reads, owner lockout guard
   migrations/0005_daily_receipt_numbers.sql # per-day receipt counters
+  migrations/0006_product_images_storage.sql # product-images bucket + storage policies
   seed.sql                 # menu re-seed
   verify.sql               # production schema verification queries
+  verify-storage.sql       # product-images bucket + policy checks
 scripts/test-rls.mjs       # PGlite RLS/RPC regression test
 scripts/qa-check.mjs       # automated QA matrix (screenshots -> qa-artifacts/)
 scripts/restore-drill.mjs  # restore a dump into PGlite + run verify.sql
@@ -511,7 +517,8 @@ stay in [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 ## Known limitations
 
 - No direct thermal-printer/Web Bluetooth integration; printing uses the browser dialog.
-- Product images are URLs (seeded with local SVGs); there is no image upload bucket yet. They render as plain lazy `<img>` inside a fixed aspect box, so the Next.js image optimizer is not used (owner-supplied hosts + SVG would require opening `remotePatterns`/`dangerouslyAllowSVG`).
+- Product images are uploaded by the Owner to the public Supabase Storage bucket `product-images`; seeded products still use local SVG paths and the URL field still accepts external hosts. Images render as plain lazy `<img>` inside a fixed aspect box, so the Next.js image optimizer is not used (owner-supplied hosts + SVG would require opening `remotePatterns`/`dangerouslyAllowSVG`).
+- The weekly `pg_dump` covers only the `public` schema, so Storage objects (product photos) are **not** in the backup. Keep originals on the phone/SD card, or upgrade to a plan with Storage backups. See `docs/RUNBOOK.md` §3.8.
 - Demo Mode is single-browser and not suitable for real operations.
 - Customer WhatsApp delivery is a `wa.me` deep link, not an automated messaging API.
 - Login throttling is in-memory per serverless instance; a distributed brute force across many instances is only slowed, not fully blocked.

@@ -45,13 +45,26 @@ kosong, berarti belum ada transaksi lunas pada rentang itu.
 ### Menambah menu
 
 1. Buka **Menu & Promo** → **Tambah Menu**.
-2. Isi **Nama Menu**, **Harga (Rp)** (angka saja, tanpa titik), dan **URL
-   Gambar** (opsional).
-3. Simpan. Menu langsung muncul di layar kasir.
+2. Isi **Nama Menu** dan **Harga (Rp)** (angka saja, tanpa titik).
+3. **Foto Menu** (opsional):
+   - Ketuk **Pilih Foto**, lalu ambil dari galeri atau kamera.
+   - Format yang didukung: JPG, PNG, WebP, AVIF. Maksimal **5 MB**.
+   - Foto otomatis dikecilkan ke sisi terpanjang **1200 px** dan diubah ke
+     WebP sebelum diunggah, jadi foto HP 4–8 MB tetap ringan di layar kasir.
+   - Ketuk **Ganti Foto** untuk mengganti, atau **Hapus** untuk kembali ke
+     gambar placeholder.
+4. Tidak punya foto siap pakai? Tempel **URL Gambar** atau pilih salah satu
+   **preset** bawaan. Ini juga satu-satunya cara di **Mode Demo**, karena
+   upload butuh Supabase Storage.
+5. Simpan. Menu langsung muncul di layar kasir.
+
+> Foto lama dihapus dari Storage **setelah** menu berhasil disimpan. Kalau
+> penyimpanan gagal, foto lama tetap aman dan bisa dipakai lagi.
 
 ### Mengubah harga / nama / gambar
 
-Ketuk ikon **pensil** pada kartu menu, ubah, lalu simpan.
+Ketuk ikon **pensil** pada kartu menu, ubah, lalu simpan. Mengganti foto
+otomatis menghapus file lama supaya Storage tidak menumpuk gambar yatim.
 
 > Perubahan harga **hanya berlaku untuk transaksi baru**. Nota lama tetap
 > memakai harga saat transaksi dibuat. Pengecualian: kalau sebuah transaksi
