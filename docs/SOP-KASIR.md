@@ -40,6 +40,10 @@ minta Owner mereset password. **Tidak ada tombol “lupa password”** untuk kas
 1. Ketuk kartu menu. Ketuk lagi untuk menambah jumlah.
 2. Keranjang muncul di bawah. Ketuk **Checkout** (atau bar total) untuk membuka
    keranjang.
+
+   > Di iPad/tablet (lebar ≥768 px), keranjang selalu tampil di panel kanan.
+   > Ketuk **Lihat Pesanan** untuk membuka formulir checkout.
+
 3. Di keranjang, periksa dan sesuaikan:
    - **Jumlah item:** tombol **−** / **+**.
    - **Hapus item:** ikon tempat sampah di baris item.
