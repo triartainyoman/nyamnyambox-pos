@@ -18,6 +18,9 @@ export async function listProfiles(): Promise<Profile[]> {
   const { data, error } = await client()
     .from("profiles")
     .select("*")
+    // The hidden DEVELOPER account is never part of the staff listing. RLS
+    // already hides it from non-developers; this keeps the intent explicit.
+    .neq("role", "DEVELOPER")
     .order("name", { ascending: true });
 
   if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat data karyawan."));

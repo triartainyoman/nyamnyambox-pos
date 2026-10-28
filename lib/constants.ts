@@ -38,15 +38,21 @@ export const PAYMENT_STATUSES: Array<{ value: PaymentStatus; label: string }> = 
 export const ROLE_LABELS: Record<UserRole, string> = {
   MASTER_ADMIN: "Master Admin",
   OWNER: "Owner",
+  DEVELOPER: "Developer",
   EMPLOYEE: "Kasir",
 };
 
 export const SPICE_PRESETS = ["Sedang", "Pedas", "Ekstra Pedas", "Tanpa Sambal"];
 
-export const OWNER_ROLES: UserRole[] = ["OWNER", "MASTER_ADMIN"];
+export const OWNER_ROLES: UserRole[] = ["OWNER", "MASTER_ADMIN", "DEVELOPER"];
 
 export function isOwnerRole(role: UserRole | undefined | null) {
-  return role === "OWNER" || role === "MASTER_ADMIN";
+  return role === "OWNER" || role === "MASTER_ADMIN" || role === "DEVELOPER";
+}
+
+/** Hidden super-owner: never listed in `/employees`, managed out-of-band. */
+export function isDeveloperRole(role: UserRole | undefined | null) {
+  return role === "DEVELOPER";
 }
 
 export function homePathForRole(role: UserRole | undefined | null) {

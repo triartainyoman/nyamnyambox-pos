@@ -109,7 +109,7 @@ with checks as (
   -- Functions ---------------------------------------------------------------
   select
     'functions exist',
-    count(*) = 8,
+    count(*) = 9,
     coalesce(string_agg(p.proname, ', ' order by p.proname), '-')
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
@@ -119,6 +119,7 @@ with checks as (
       'protect_profile_fields',
       'is_active_staff',
       'is_owner',
+      'is_developer',
       'dashboard_summary',
       'create_order',
       'update_order',
@@ -130,7 +131,7 @@ with checks as (
   -- search_path pinned on every SECURITY DEFINER function -------------------
   select
     'security definer search_path',
-    count(*) = 8,
+    count(*) = 9,
     coalesce(string_agg(p.proname, ', ' order by p.proname), '-')
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
@@ -141,6 +142,7 @@ with checks as (
       'protect_profile_fields',
       'is_active_staff',
       'is_owner',
+      'is_developer',
       'dashboard_summary',
       'create_order',
       'update_order',
@@ -193,6 +195,17 @@ with checks as (
 
   union all
 
+  -- Hidden developer role ---------------------------------------------------
+  select
+    'developer hidden from staff directory',
+    coalesce(
+      (select pg_get_viewdef('public.staff_directory'::regclass) like '%DEVELOPER%'),
+      false
+    ),
+    'role filter present'
+
+  union all
+
   -- RPC grants --------------------------------------------------------------
   select
     'authenticated can execute RPCs',
@@ -223,9 +236,9 @@ with checks as (
   select
     'active owner exists',
     count(*) >= 1,
-    count(*)::text || ' active owner/master admin'
+    count(*)::text || ' active owner/master admin/developer'
   from public.profiles
-  where role in ('OWNER', 'MASTER_ADMIN')
+  where role in ('OWNER', 'MASTER_ADMIN', 'DEVELOPER')
     and is_active
 )
 select

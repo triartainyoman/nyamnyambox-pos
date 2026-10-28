@@ -3,15 +3,18 @@ import { describe, expect, it } from "vitest";
 import {
   channelMeta,
   homePathForRole,
+  isDeveloperRole,
   isOwnerRole,
   paymentMethodLabel,
+  ROLE_LABELS,
 } from "@/lib/constants";
 import type { OrderChannel, PaymentMethod } from "@/lib/types";
 
 describe("isOwnerRole", () => {
-  it("is true for OWNER and MASTER_ADMIN", () => {
+  it("is true for OWNER, MASTER_ADMIN and DEVELOPER", () => {
     expect(isOwnerRole("OWNER")).toBe(true);
     expect(isOwnerRole("MASTER_ADMIN")).toBe(true);
+    expect(isOwnerRole("DEVELOPER")).toBe(true);
   });
 
   it("is false for EMPLOYEE and missing roles", () => {
@@ -21,12 +24,29 @@ describe("isOwnerRole", () => {
   });
 });
 
+describe("isDeveloperRole", () => {
+  it("matches only the hidden developer role", () => {
+    expect(isDeveloperRole("DEVELOPER")).toBe(true);
+    expect(isDeveloperRole("OWNER")).toBe(false);
+    expect(isDeveloperRole("EMPLOYEE")).toBe(false);
+    expect(isDeveloperRole(null)).toBe(false);
+  });
+});
+
 describe("homePathForRole", () => {
-  it("sends owners to the dashboard and cashiers to the POS", () => {
+  it("sends owners and developers to the dashboard and cashiers to the POS", () => {
     expect(homePathForRole("OWNER")).toBe("/dashboard");
     expect(homePathForRole("MASTER_ADMIN")).toBe("/dashboard");
+    expect(homePathForRole("DEVELOPER")).toBe("/dashboard");
     expect(homePathForRole("EMPLOYEE")).toBe("/pos");
     expect(homePathForRole(null)).toBe("/pos");
+  });
+});
+
+describe("ROLE_LABELS", () => {
+  it("labels every role", () => {
+    expect(ROLE_LABELS.DEVELOPER).toBe("Developer");
+    expect(ROLE_LABELS.EMPLOYEE).toBe("Kasir");
   });
 });
 

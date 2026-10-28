@@ -38,10 +38,26 @@ export const DEMO_PROFILES: Profile[] = [
     is_active: false,
     created_at: "2026-04-02T02:00:00.000Z",
   },
+  {
+    id: "demo-developer",
+    username: "developer",
+    name: "Developer",
+    email: "developer@nyamnyambox.demo",
+    role: "DEVELOPER",
+    is_active: true,
+    created_at: "2026-01-01T02:00:00.000Z",
+  },
 ];
 
 export function demoProfileForRole(role: string | undefined): Profile | null {
-  if (role === "OWNER") return DEMO_PROFILES[0];
-  if (role === "EMPLOYEE") return DEMO_PROFILES[1];
+  if (role === "OWNER") {
+    return DEMO_PROFILES.find((profile) => profile.role === "OWNER") ?? null;
+  }
+  if (role === "DEVELOPER") {
+    return DEMO_PROFILES.find((profile) => profile.role === "DEVELOPER") ?? null;
+  }
+  if (role === "EMPLOYEE") {
+    return DEMO_PROFILES.find((profile) => profile.role === "EMPLOYEE") ?? null;
+  }
   return null;
 }

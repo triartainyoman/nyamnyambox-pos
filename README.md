@@ -61,7 +61,7 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 - **Cashier** signs in with **username + password** (or email as a fallback).
 - Supabase email/password auth with cookie-based sessions.
 - Route protection via `proxy.ts` (Next.js 16 middleware).
-- Roles: `MASTER_ADMIN`, `OWNER`, `EMPLOYEE` (Kasir).
+- Roles: `MASTER_ADMIN`, `OWNER`, `DEVELOPER` (hidden), `EMPLOYEE` (Kasir).
 - Business dates use `Asia/Jakarta` (WIB, UTC+7).
 
 ---
@@ -253,7 +253,7 @@ fi
 
 ## Roles & access
 
-| Page | MASTER_ADMIN / OWNER | EMPLOYEE (Kasir) |
+| Page | MASTER_ADMIN / OWNER / DEVELOPER | EMPLOYEE (Kasir) |
 | --- | --- | --- |
 | `/pos` | ✅ | ✅ |
 | `/history` | ✅ All dates | ✅ Today only |
@@ -261,9 +261,23 @@ fi
 | `/products` | ✅ | Redirected to `/pos` |
 | `/employees` | ✅ | Redirected to `/pos` |
 
-After login, Owner/Master Admin land on `/dashboard`; cashiers land on `/pos`.
+After login, Owner/Master Admin/Developer land on `/dashboard`; cashiers land on `/pos`.
 
 RLS enforces the same boundaries at the database level. Employees can only read orders from the current Jakarta business day, while Owners can read all orders. Deactivated profiles (`is_active = false`) fail the `is_active_staff()` check and cannot read or write data.
+
+### Hidden DEVELOPER account
+
+`DEVELOPER` is a maintenance super-owner. It is intentionally **not manageable from the app**:
+
+- It never appears in `/employees` (the query filters `role != 'DEVELOPER'`), and the `staff_directory` view hides the name from order history/receipts.
+- An Owner cannot read, update, deactivate, promote to, or delete the developer row — enforced by the `profiles` RLS policies and the `protect_profile_fields` trigger.
+- Only the service role (SQL editor / admin key) or another developer can create or change it. Promote an existing Auth user with:
+
+```sql
+update public.profiles set role = 'DEVELOPER' where email = 'developer@example.com';
+```
+
+The developer signs in with **email + password**, like an Owner. To revoke access, set the role back to `EMPLOYEE` or `is_active = false` with the service role.
 
 ---
 
@@ -275,9 +289,9 @@ RLS enforces the same boundaries at the database level. Employees can only read 
 - **Receipt numbers** — generated as `NYB-YYYYMMDD-NNNN` from a per-day counter. Each Jakarta business day starts at `0001`; the counter row is updated atomically so parallel checkouts cannot duplicate a number.
 - **`is_edited`** — set automatically by `update_order`, displayed on receipts and history.
 - **Analytics** — `dashboard_summary` aggregates today's metrics, 6-month sales, channel revenue, and top products in one call.
-- **Profile privacy** — staff can read only their own `profiles` row; owners can read all. Order history uses the minimal `staff_directory` view (`id`, `name`) so cashier names stay visible without exposing emails.
-- **Owner lockout protection** — an owner cannot deactivate or demote their own account, and the last active owner cannot be removed.
-- **Profile protection** — a trigger prevents non-owners from changing their own `role`, `is_active`, or `email`.
+- **Profile privacy** — staff can read only their own `profiles` row; owners can read all non-developer rows, and only a developer can read developer rows. Order history uses the minimal `staff_directory` view (`id`, `name`) so cashier names stay visible without exposing emails; developer names are filtered out of that view too.
+- **Owner lockout protection** — an owner/developer cannot deactivate or demote their own account, and at least one active privileged account (Owner, Master Admin or Developer) must remain.
+- **Profile protection** — a trigger prevents non-owners from changing their own `role`, `is_active`, or `email`, and refuses any change to a `DEVELOPER` row unless the caller is a developer or the service role.
 - **No hard deletes** — products are deactivated instead of deleted so historical receipts stay intact.
 - **Pinned `search_path`** — every `SECURITY DEFINER` function uses `public, pg_temp` to prevent schema-shadowing attacks.
 
@@ -421,6 +435,7 @@ git push -u origin feat/my-change
 - cashiers only see today's orders, inactive accounts are locked out, and anonymous access is denied;
 - cashiers can read only their own profile and see cashier names through the minimal `staff_directory` view;
 - owners cannot deactivate/demote themselves, and the last active owner cannot be removed;
+- the hidden developer row is invisible/immutable to owners, developer names are filtered from `staff_directory`, and only a developer can read or change it;
 - receipt numbers increment per business day and a different day starts again at `0001`;
 - only `SELECT` policies remain on order tables and every `SECURITY DEFINER` function pins `search_path`.
 
@@ -436,7 +451,7 @@ This is a fast local check. It does not replace testing against a real Supabase 
 4. Deploy. `vercel.json` pins functions to `sin1` (Singapore) so they sit next to the Supabase `ap-southeast-1` project; change it if the database moves. Verify with `curl -sI https://<domain>/login | grep -i x-vercel-id`.
 5. Add the Vercel URL to Supabase **Authentication → URL Configuration**.
 6. Run all migrations against the production Supabase project, in order:
-   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, `0005_daily_receipt_numbers.sql`, then `0006_product_images_storage.sql`.
+   `0001_init.sql`, `0002_username_login.sql`, `0003_harden_order_writes.sql`, `0004_profile_privacy.sql`, `0005_daily_receipt_numbers.sql`, `0006_product_images_storage.sql`, `0007_developer_role.sql`, then `0008_developer_policies.sql`.
 7. Run `supabase/verify.sql` and confirm every row shows `OK` (after the first Owner is promoted), then `supabase/verify-storage.sql` for the `product-images` bucket.
 8. Optional custom domain: Vercel → *Domains* → add the domain and point DNS, then update Supabase **Site URL / Redirect URLs**. The current production runs on the `*.vercel.app` subdomain with automatic HTTPS; no code change is needed when a domain is added. Rollback steps are in `docs/RUNBOOK.md` §5.5.
 
@@ -481,6 +496,8 @@ supabase/
   migrations/0004_profile_privacy.sql # self/owner profile reads, owner lockout guard
   migrations/0005_daily_receipt_numbers.sql # per-day receipt counters
   migrations/0006_product_images_storage.sql # product-images bucket + storage policies
+  migrations/0007_developer_role.sql # DEVELOPER enum value (own migration)
+  migrations/0008_developer_policies.sql # hidden developer: helpers, RLS, trigger
   seed.sql                 # menu re-seed
   verify.sql               # production schema verification queries
   verify-storage.sql       # product-images bucket + policy checks

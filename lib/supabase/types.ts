@@ -195,7 +195,7 @@ export type Database = {
       };
     };
     Enums: {
-      user_role: "MASTER_ADMIN" | "OWNER" | "EMPLOYEE";
+      user_role: "MASTER_ADMIN" | "OWNER" | "DEVELOPER" | "EMPLOYEE";
       order_channel: "DINE_IN" | "TAKEAWAY" | "GRABFOOD" | "SHOPEEFOOD" | "WHATSAPP";
       payment_method: "CASH" | "TRANSFER" | "QRIS" | "E_WALLET";
       payment_status: "LUNAS" | "BELUM_LUNAS";

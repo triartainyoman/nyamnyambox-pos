@@ -517,6 +517,44 @@ Setelah rotasi apa pun: catat tanggal + alasan di laporan insiden, dan pastikan
 tidak ada key baru yang masuk ke git (`git log -p | grep -i 'service_role'`
 harus kosong).
 
+### 5.8 Akun Developer (hidden)
+
+`DEVELOPER` adalah akun super-owner untuk maintenance. Akun ini **sengaja tidak
+bisa dikelola dari aplikasi**:
+
+- Tidak muncul di `/employees` (query memfilter `role != 'DEVELOPER'`).
+- Owner tidak bisa melihat, mengubah, menonaktifkan, atau menghapusnya — RLS
+  `profiles` + trigger `protect_profile_fields` menolak.
+- Nama developer juga disembunyikan dari `staff_directory`, jadi tidak muncul
+  di riwayat/nota.
+- Login memakai **email + password** (seperti Owner), bukan username.
+
+**Membuat / mempromosikan** (butuh service role / SQL Editor):
+
+```sql
+-- 1) Buat user di Authentication → Users (email + password), lalu:
+update public.profiles
+set role = 'DEVELOPER'
+where email = 'developer@example.com';
+```
+
+**Mencabut akses** (service role / SQL Editor):
+
+```sql
+update public.profiles
+set role = 'EMPLOYEE', is_active = false
+where email = 'developer@example.com';
+```
+
+Jangan menurunkan role lewat aplikasi: Owner memang tidak diberi izin, dan
+developer tidak bisa menurunkan/menonaktifkan dirinya sendiri (proteksi
+lockout). Kalau akun developer perlu dihapus permanen, lakukan lewat
+**Authentication → Users** dengan service role.
+
+Migrasi terkait: `0007_developer_role.sql` (enum) dan
+`0008_developer_policies.sql` (helper, RLS, trigger). Jalankan berurutan —
+`ALTER TYPE ... ADD VALUE` tidak boleh satu transaksi dengan pemakaiannya.
+
 ---
 
 ## 6. Log drill restore

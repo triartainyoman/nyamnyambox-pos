@@ -119,6 +119,9 @@ tidak bisa membuat transaksi; riwayatnya tetap ada.
   lockout.
 - Tidak ada tombol hapus akun. Menonaktifkan sudah cukup dan menjaga jejak
   audit.
+- Akun **Developer** (akun teknis, jika ada) tidak ditampilkan di daftar ini
+  dan tidak dapat Anda lihat atau ubah dari aplikasi. Itu disengaja; lihat
+  `docs/RUNBOOK.md` §5.8.
 
 ### Mereset password kasir
 
@@ -203,6 +206,9 @@ ke repo.
   bisa mengubah atau menghapus data toko.
 - Kunci rahasia (service role key, password database) hanya disimpan di
   `.env.local`/Vercel dan file di home directory, tidak di repo.
+- Akun **Developer** adalah akun teknis tersembunyi: tidak muncul di Kelola
+  Karyawan dan tidak bisa Anda ubah. Perubahan hanya lewat service role
+  (lihat `docs/RUNBOOK.md` §5.8).
 - Kalau ada tanda kebocoran, ikuti **rotasi kunci** di `README.md` §7 dan
   `docs/RUNBOOK.md` §5.7.
 
