@@ -120,10 +120,6 @@ export function EditEmployeeDialog({
             <div>
               <Label htmlFor="edit-employee-email">Email</Label>
               <Input id="edit-employee-email" value={employee.email} disabled />
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Email dipakai Supabase sebagai identitas akun. Perubahan email hanya lewat
-                dashboard Supabase.
-              </p>
             </div>
 
             {isDemoMode && (
