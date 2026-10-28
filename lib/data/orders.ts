@@ -71,6 +71,48 @@ export async function listOrders(fromISO: string, toISO: string): Promise<Order[
   return rows.map((row) => mapOrder(row, cashierNames));
 }
 
+const EXPORT_PAGE_SIZE = 1000;
+const EXPORT_MAX_PAGES = 50;
+
+/**
+ * Monthly exports can exceed PostgREST's default 1000-row limit, so page
+ * through the range explicitly. Used only by the Excel export, never by the
+ * daily list (which is small and should stay a single request).
+ */
+export async function listAllOrders(fromISO: string, toISO: string): Promise<Order[]> {
+  if (isDemoMode) {
+    const { demoListOrders } = await import("@/lib/demo/api");
+    return demoListOrders(fromISO, toISO);
+  }
+
+  const rows: OrderQueryRow[] = [];
+  for (let page = 0; page < EXPORT_MAX_PAGES; page += 1) {
+    const from = page * EXPORT_PAGE_SIZE;
+    const { data, error } = await client()
+      .from("orders")
+      .select(ORDER_SELECT)
+      .gte("created_at", fromISO)
+      .lt("created_at", toISO)
+      .order("created_at", { ascending: false })
+      .range(from, from + EXPORT_PAGE_SIZE - 1);
+
+    if (error) throw new UserFacingError(friendlyError(error, "Gagal memuat transaksi."));
+
+    const pageRows = (data ?? []) as unknown as OrderQueryRow[];
+    rows.push(...pageRows);
+    if (pageRows.length < EXPORT_PAGE_SIZE) break;
+
+    if (page === EXPORT_MAX_PAGES - 1) {
+      throw new UserFacingError(
+        "Transaksi bulan ini terlalu banyak untuk diekspor sekaligus. Hubungi developer.",
+      );
+    }
+  }
+
+  const cashierNames = await loadCashierNames(rows);
+  return rows.map((row) => mapOrder(row, cashierNames));
+}
+
 export async function getOrderById(orderId: string): Promise<Order | null> {
   if (isDemoMode) {
     const { demoListOrders } = await import("@/lib/demo/api");

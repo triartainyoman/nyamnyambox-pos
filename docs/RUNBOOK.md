@@ -268,8 +268,8 @@ Catat hasilnya di tabel drill di bagian 6.
 
 - Artifact GitHub: 90 hari. Unduh **sebulan sekali**.
 - Simpan 3 backup bulanan terakhir + 1 backup akhir tahun.
-- Simpan juga ekspor CSV bulanan (bagian 4) bersama backup — kalau schema
-  berubah, CSV tetap terbaca.
+- Simpan juga ekspor Excel/CSV bulanan (bagian 4) bersama backup — kalau schema
+  berubah, file ekspor tetap terbaca.
 - Simpan foto menu asli (bagian 3.8). Foto tidak ikut `pg_dump`.
 
 ### 3.7 Kalau data hilang / rusak
@@ -328,6 +328,31 @@ where o.bucket_id = 'product-images'
 
 ## 4. Ekspor transaksi untuk pembukuan
 
+Ada dua jalur: **Excel dari aplikasi** (paling mudah, untuk Owner) dan **CSV
+lewat script** (untuk otomatisasi/arsip di laptop).
+
+### 4.1. Excel bulanan dari aplikasi
+
+1. Masuk sebagai Owner, buka **Riwayat Transaksi** (`/history`).
+2. Di kartu **Ekspor Excel bulanan**, pilih bulan dan tahun.
+3. Klik **Unduh Excel** — file `Nyamnyambox-YYYY-MM.xlsx` tersimpan di folder
+   unduhan. Tidak ada data yang dikirim ke pihak ketiga; workbook dibuat di
+   browser dari baris yang dibaca langsung dari Supabase.
+
+Isi workbook:
+
+| Sheet | Isi |
+| --- | --- |
+| `Transaksi` | Satu baris per nota: nomor, tanggal & jam WIB, kasir, kanal, metode/status bayar, jumlah item, total, tanda diedit, ringkasan item |
+| `Item` | Satu baris per item: nomor nota, tanggal & jam, produk, qty, harga satuan, subtotal, catatan |
+| `Ringkasan` | Jumlah transaksi, lunas/belum lunas, omzet lunas, nilai belum lunas, total item, rata-rata, transaksi diedit, omzet per kanal |
+
+Batas praktis: 50.000 transaksi per bulan (paginasi 1.000 baris). Kalau
+terlampaui, aplikasi menampilkan pesan untuk menghubungi developer dan CSV
+script di bawah tetap bisa dipakai.
+
+### 4.2. CSV lewat script
+
 ```bash
 # Satu bulan penuh (Asia/Jakarta)
 npm run export:orders -- --month 2026-10
@@ -357,9 +382,9 @@ metode bayar) dicetak ke terminal, bukan ke dalam CSV.
 
 Rutinitas tutup buku bulanan:
 
-1. `npm run export:orders -- --month <YYYY-MM>`
-2. Cocokkan total CSV dengan uang tunai + mutasi QRIS/transfer.
-3. Arsipkan CSV bersama backup bulan itu.
+1. Unduh **Excel** bulan itu dari `/history` (Owner) — atau `npm run export:orders -- --month <YYYY-MM>` bila butuh CSV.
+2. Cocokkan total di sheet `Ringkasan` (atau total CSV) dengan uang tunai + mutasi QRIS/transfer.
+3. Arsipkan file bersama backup bulan itu.
 4. Simpan file di folder pembukuan; jangan commit ke repo (sudah di-`.gitignore`).
 
 ---

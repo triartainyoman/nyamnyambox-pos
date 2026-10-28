@@ -36,6 +36,7 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 - Detail sheet with the full receipt.
 - **Edit transactions**: change quantities, remove/add items, edit notes, change payment method/status and customer phone. Edited orders are flagged `is_edited` and show a **Diedit** badge.
 - Reprint or resend the receipt after editing.
+- **Monthly Excel export** (Owner only): pick a month/year and download `Nyamnyambox-YYYY-MM.xlsx` with three sheets — `Transaksi` (one row per order), `Item` (one row per line item with subtotal) and `Ringkasan` (totals, paid/unpaid split, per-channel revenue). Generated in the browser, so no data leaves Supabase for a third party.
 
 ### Dashboard (`/dashboard`, Owner only)
 - Today's revenue, order count, and average order value.
@@ -313,7 +314,7 @@ curl -sD - -o /dev/null https://nyamnyambox-pos.vercel.app/login | grep -iE "con
 - **Health check.** `GET /api/health` returns `200` when the app and Supabase (PostgREST + Auth) are reachable and `503` when a dependency is down or production is missing its Supabase env. It bypasses the Proxy, so it is fast and needs no session.
 - **Uptime.** `.github/workflows/uptime.yml` pings `/api/health` every 30 minutes; a failed run e-mails the repository owner.
 - **Backups.** `.github/workflows/backup.yml` runs a weekly `pg_dump` of the `public` schema to a 90-day GitHub artifact (the Supabase free plan has no automatic backups). `npm run drill:restore` restores a dump into a throwaway Postgres and runs `supabase/verify.sql` against it.
-- **Bookkeeping export.** `npm run export:orders -- --month 2026-10` writes a CSV of transactions (Asia/Jakarta timestamps, human-readable labels, no customer phone numbers).
+- **Bookkeeping export.** Owners download a multi-sheet `.xlsx` (transactions, line items, summary) straight from `/history` for any month. For scripting, `npm run export:orders -- --month 2026-10` writes a CSV of transactions (Asia/Jakarta timestamps, human-readable labels, no customer phone numbers).
 
 Full procedures — where to find logs, how to run a restore drill against a staging project, incident checklists — live in [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 

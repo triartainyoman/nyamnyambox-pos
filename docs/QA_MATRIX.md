@@ -6,7 +6,7 @@ bagian manual butuh perangkat nyata (printer thermal, HP, Safari iOS).
 - **Terakhir dijalankan:** 2026-10-28
 - **Lingkungan otomatis:** Chromium (Playwright), dev server demo mode `127.0.0.1:3210`
 - **Data:** demo (localStorage), bukan project Supabase production
-- **Pipeline lokal:** `npm run ci` (typecheck, lint, 197 unit test, production build) dan `npm run test:e2e` (16 skenario) hijau pada commit yang sama.
+- **Pipeline lokal:** `npm run ci` (typecheck, lint, 210 unit test, production build) dan `npm run test:e2e` (18 skenario) hijau pada commit yang sama.
 
 ## Menjalankan ulang bagian otomatis
 
@@ -56,6 +56,8 @@ grid menu **3 kolom**, dan bottom bar tersembunyi. Di 1280 px grid menjadi
 | Tautan WhatsApp berisi nomor nota | ✅ `https://wa.me/?text=…` |
 | Edit transaksi di riwayat (status, catatan, nomor WA) | ✅ (dijaga E2E `e2e/cashier.spec.ts`) |
 | Cetak dari sheet detail riwayat: hanya struk yang tampil, tanpa tombol/kartu/`nyamnyambox.com` | ✅ (dijaga E2E `e2e/cashier.spec.ts`, media print) |
+| Ekspor Excel bulanan (Owner): pilih bulan/tahun → `Nyamnyambox-YYYY-MM.xlsx` berisi 3 sheet, file > 1 KB, toast sukses | ✅ (dijaga E2E `e2e/export.spec.ts`) |
+| Kasir tidak melihat kartu ekspor Excel di `/history` | ✅ (dijaga E2E `e2e/export.spec.ts`) |
 
 ## 3. Kondisi khusus — otomatis ✅
 

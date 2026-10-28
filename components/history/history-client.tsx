@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { ExcelExportCard } from "@/components/history/excel-export-card";
 import { OrderDetailSheet } from "@/components/history/order-detail-sheet";
 import { ChannelBadge, EditedBadge, PaymentBadge } from "@/components/order-badges";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,8 @@ export function HistoryClient({ canViewAll }: { canViewAll: boolean }) {
           </p>
         </div>
       </div>
+
+      {canViewAll && <ExcelExportCard />}
 
       <section className="space-y-2.5">
         <div className="flex items-center justify-between">

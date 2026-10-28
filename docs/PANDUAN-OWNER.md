@@ -152,7 +152,14 @@ Catatan:
 
 ## 6. Laporan & pembukuan
 
-Ekspor CSV dijalankan dari laptop (bukan dari aplikasi):
+Cara termudah: buka **Riwayat Transaksi**, pilih bulan dan tahun di kartu
+**Ekspor Excel bulanan**, lalu klik **Unduh Excel**. File
+`Nyamnyambox-YYYY-MM.xlsx` berisi sheet `Transaksi`, `Item`, dan `Ringkasan`
+(omzet lunas, belum lunas, dan per kanal). File dibuat di browser — tidak ada
+data yang dikirim ke layanan lain.
+
+Untuk arsip otomatis, ekspor CSV juga bisa dijalankan dari laptop (bukan dari
+aplikasi):
 
 ```bash
 npm run export:orders -- --month 2026-10
@@ -182,7 +189,7 @@ ke repo.
 
 **Bulanan**
 
-- [ ] Ekspor CSV bulan lalu untuk pembukuan.
+- [ ] Unduh Excel (atau ekspor CSV) bulan lalu untuk pembukuan.
 - [ ] Tinjau daftar kasir: nonaktifkan akun yang sudah tidak bekerja.
 - [ ] Ganti password Owner secara berkala.
 
