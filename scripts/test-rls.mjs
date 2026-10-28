@@ -22,6 +22,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OWNER_ID = "11111111-1111-1111-1111-111111111111";
 const CASHIER_ID = "22222222-2222-2222-2222-222222222222";
 const INACTIVE_ID = "33333333-3333-3333-3333-333333333333";
+const DEVELOPER_ID = "44444444-4444-4444-4444-444444444444";
 
 function migration(name) {
   return readFileSync(join(ROOT, "supabase", "migrations", name), "utf8").replace(
@@ -139,6 +140,8 @@ async function main() {
   `);
 
   await db.exec(migration("0006_product_images_storage.sql"));
+  await db.exec(migration("0007_developer_role.sql"));
+  await db.exec(migration("0008_developer_policies.sql"));
 
   // --------------------------------------------------------------------------
   // Fixtures
@@ -588,6 +591,103 @@ async function main() {
   );
 
   // --------------------------------------------------------------------------
+  // Hidden developer (0007 + 0008)
+  // --------------------------------------------------------------------------
+  await db.query(
+    `insert into auth.users (id, email, raw_user_meta_data)
+     values ($1, 'developer@test.local', '{"name":"Developer Test","username":"developer"}'::jsonb)`,
+    [DEVELOPER_ID],
+  );
+  await db.query(`update public.profiles set role = 'DEVELOPER' where id = $1`, [DEVELOPER_ID]);
+  log("developer profile created");
+
+  const ownerProfileCount = await runAs("authenticated", OWNER_ID, () =>
+    db.query(`select count(*)::int as count from public.profiles`),
+  );
+  assert.equal(ownerProfileCount.rows[0].count, 3, "owner must not see the developer row");
+  log("owner cannot see the developer profile");
+
+  const ownerDeveloperRead = await runAs("authenticated", OWNER_ID, () =>
+    db.query(`select email from public.profiles where id = $1`, [DEVELOPER_ID]),
+  );
+  assert.equal(ownerDeveloperRead.rows.length, 0);
+  log("owner cannot read the developer email");
+
+  const ownerDeveloperUpdate = await runAs("authenticated", OWNER_ID, () =>
+    db.query(
+      `update public.profiles set is_active = false where id = $1 returning id`,
+      [DEVELOPER_ID],
+    ),
+  );
+  assert.equal(ownerDeveloperUpdate.rows.length, 0);
+  log("owner cannot deactivate the developer");
+
+  await expectError(
+    "owner cannot promote an employee to developer",
+    () =>
+      runAs("authenticated", OWNER_ID, () =>
+        db.query(
+          `update public.profiles set role = 'DEVELOPER' where id = $1 returning role`,
+          [CASHIER_ID],
+        ),
+      ),
+    /row-level security/i,
+  );
+
+  await expectError(
+    "owner cannot promote themselves to developer",
+    () =>
+      runAs("authenticated", OWNER_ID, () =>
+        db.query(
+          `update public.profiles set role = 'DEVELOPER' where id = $1 returning role`,
+          [OWNER_ID],
+        ),
+      ),
+    /row-level security/i,
+  );
+
+  const developerProfiles = await runAs("authenticated", DEVELOPER_ID, () =>
+    db.query(`select count(*)::int as count from public.profiles`),
+  );
+  assert.equal(developerProfiles.rows[0].count, 4);
+  log("developer can read every profile");
+
+  const developerOrders = await runAs("authenticated", DEVELOPER_ID, () =>
+    db.query(`select count(*)::int as count from public.orders`),
+  );
+  const ownerOrdersNow = await runAs("authenticated", OWNER_ID, () =>
+    db.query(`select count(*)::int as count from public.orders`),
+  );
+  assert.equal(developerOrders.rows[0].count, ownerOrdersNow.rows[0].count);
+  assert.ok(developerOrders.rows[0].count >= 2);
+  log("developer is treated as an owner for order access");
+
+  const developerUpdate = await runAs("authenticated", DEVELOPER_ID, () =>
+    db.query(
+      `update public.profiles set name = 'Kasir Test (dev edit)' where id = $1 returning name`,
+      [CASHIER_ID],
+    ),
+  );
+  assert.equal(developerUpdate.rows[0].name, "Kasir Test (dev edit)");
+  log("developer can manage owner/employee profiles");
+
+  await expectError(
+    "developer cannot demote their own role",
+    () =>
+      runAs("authenticated", DEVELOPER_ID, () =>
+        db.query(`update public.profiles set role = 'EMPLOYEE' where id = $1`, [DEVELOPER_ID]),
+      ),
+    /tidak dapat menonaktifkan atau menurunkan/i,
+  );
+
+  const directoryAfterDeveloper = await runAs("authenticated", CASHIER_ID, () =>
+    db.query(`select name from public.staff_directory order by name`),
+  );
+  assert.equal(directoryAfterDeveloper.rows.length, 3);
+  assert.ok(!directoryAfterDeveloper.rows.some((row) => row.name === "Developer Test"));
+  log("staff directory hides the developer name");
+
+  // --------------------------------------------------------------------------
   // Schema-level assertions
   // --------------------------------------------------------------------------
   const grants = await db.query(
@@ -648,6 +748,7 @@ async function main() {
        'protect_profile_fields',
        'is_active_staff',
        'is_owner',
+       'is_developer',
        'dashboard_summary',
        'create_order',
        'update_order',
@@ -655,7 +756,7 @@ async function main() {
      )
      order by proname`,
   );
-  assert.equal(functions.rows.length, 8);
+  assert.equal(functions.rows.length, 9);
   for (const row of functions.rows) {
     assert.ok(
       (row.proconfig ?? []).includes("search_path=public, pg_temp"),

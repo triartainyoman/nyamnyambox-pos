@@ -1,6 +1,6 @@
 "use client";
 
-import { DEMO_COOKIE, DEMO_EMPLOYEE_ID, DEMO_OWNER_ID } from "@/lib/demo/constants";
+import { DEMO_COOKIE, DEMO_EMPLOYEE_ID } from "@/lib/demo/constants";
 import { DEMO_PROFILES } from "@/lib/demo/profiles";
 import type { Order, Product, Profile } from "@/lib/types";
 
@@ -244,10 +244,15 @@ export function currentDemoProfile(): Profile {
           .find((entry) => entry.startsWith(`${DEMO_COOKIE}=`))
           ?.split("=")[1]
       : undefined;
-  if (role === "OWNER") {
-    return getDemoDb().profiles.find((profile) => profile.id === DEMO_OWNER_ID) ?? getDemoDb().profiles[0];
-  }
-  return getDemoDb().profiles.find((profile) => profile.id === DEMO_EMPLOYEE_ID) ?? getDemoDb().profiles[1];
+  const db = getDemoDb();
+  const byRole = (candidate: string) =>
+    db.profiles.find((profile) => profile.role === candidate && profile.is_active) ??
+    db.profiles.find((profile) => profile.role === candidate) ??
+    db.profiles[0];
+
+  if (role === "OWNER") return byRole("OWNER");
+  if (role === "DEVELOPER") return byRole("DEVELOPER");
+  return byRole("EMPLOYEE");
 }
 
 export { DB_KEY };

@@ -254,7 +254,9 @@ export function demoDashboard(): DashboardSummary {
 }
 
 export function demoListProfiles(): Profile[] {
-  return [...getDemoDb().profiles].sort((a, b) => a.name.localeCompare(b.name));
+  return [...getDemoDb().profiles]
+    .filter((profile) => profile.role !== "DEVELOPER")
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function demoCreateEmployee(input: {
@@ -291,7 +293,18 @@ export function demoUpdateProfile(
   const db = getDemoDb();
   const index = db.profiles.findIndex((profile) => profile.id === id);
   if (index < 0) throw new UserFacingError("Akun tidak ditemukan");
-  const updated = { ...db.profiles[index], ...patch };
+
+  const current = currentDemoProfile();
+  const target = db.profiles[index];
+  const isDeveloper = current.role === "DEVELOPER";
+
+  // Mirrors the production RLS policies: the hidden developer row is invisible
+  // and immutable to owners, and only a developer may grant the role.
+  if (!isDeveloper && (target.role === "DEVELOPER" || patch.role === "DEVELOPER")) {
+    throw new UserFacingError("Akun Developer hanya dapat diubah oleh Developer");
+  }
+
+  const updated = { ...target, ...patch };
   db.profiles[index] = updated;
   saveDemoDb(db);
   return updated;

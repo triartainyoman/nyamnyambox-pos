@@ -26,3 +26,9 @@ export async function loginAsOwner(page: Page) {
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { name: "Dashboard", exact: true })).toBeVisible();
 }
+
+export async function loginAsDeveloper(page: Page) {
+  await login(page, "developer@nyamnyambox.demo");
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("heading", { name: "Dashboard", exact: true })).toBeVisible();
+}

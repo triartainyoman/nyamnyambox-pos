@@ -1,4 +1,4 @@
-export type UserRole = "MASTER_ADMIN" | "OWNER" | "EMPLOYEE";
+export type UserRole = "MASTER_ADMIN" | "OWNER" | "DEVELOPER" | "EMPLOYEE";
 
 export type OrderChannel =
   | "DINE_IN"

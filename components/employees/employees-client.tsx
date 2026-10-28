@@ -19,6 +19,7 @@ import { formatDate, formatNumber, initials } from "@/lib/utils";
 const ROLE_VARIANT: Record<UserRole, "default" | "info" | "secondary"> = {
   MASTER_ADMIN: "info",
   OWNER: "default",
+  DEVELOPER: "info",
   EMPLOYEE: "secondary",
 };
 
