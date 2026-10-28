@@ -10,6 +10,7 @@ import {
   clientErrorRateLimitRules,
   clientIpFromHeaders,
   loginRateLimitRules,
+  passwordChangeRateLimitRules,
   rateLimitMessage,
   recordRateLimitFailure,
   resetRateLimitsForTests,
@@ -129,6 +130,33 @@ describe("client error rate limit", () => {
     }
     expect(checkRateLimit(clientErrorRateLimitRules("203.0.113.7"), T0).limited).toBe(false);
     expect(checkRateLimit(loginRateLimitRules("203.0.113.7", "rizky"), T0).limited).toBe(true);
+  });
+});
+
+describe("password change rate limit", () => {
+  beforeEach(() => resetRateLimitsForTests());
+
+  it("counts per user and IP without touching login counters", () => {
+    const user = "11111111-1111-1111-1111-111111111111";
+    for (let i = 0; i < 5; i += 1) {
+      recordRateLimitFailure(passwordChangeRateLimitRules(user, "203.0.113.7"), T0 + i);
+    }
+    expect(checkRateLimit(passwordChangeRateLimitRules(user, "203.0.113.7"), T0).limited).toBe(
+      true,
+    );
+    expect(
+      checkRateLimit(passwordChangeRateLimitRules(user, "203.0.113.8"), T0).limited,
+    ).toBe(false);
+    expect(checkRateLimit(loginRateLimitRules("203.0.113.7", "rizky"), T0).limited).toBe(
+      false,
+    );
+  });
+
+  it("clears after a successful change", () => {
+    const rules = passwordChangeRateLimitRules("user-1", "203.0.113.7");
+    for (let i = 0; i < 5; i += 1) recordRateLimitFailure(rules, T0 + i);
+    clearRateLimit(rules);
+    expect(checkRateLimit(rules, T0).limited).toBe(false);
   });
 });
 

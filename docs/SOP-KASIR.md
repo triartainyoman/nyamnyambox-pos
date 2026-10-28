@@ -32,6 +32,8 @@ Panduan harian untuk kasir. Cetak/simpan di dekat meja kasir.
 
 Kalau salah password 5 kali, akun dikunci sementara ±15 menit. Tunggu, atau
 minta Owner mereset password. **Tidak ada tombol “lupa password”** untuk kasir.
+Kasir juga **tidak bisa mengganti password sendiri** — halaman Keamanan Akun
+hanya untuk Owner. Hubungi Owner kalau password perlu diganti.
 
 ---
 

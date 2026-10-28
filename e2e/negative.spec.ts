@@ -15,7 +15,7 @@ test("owner tidak dapat masuk memakai username", async ({ page }) => {
 test("kasir dialihkan dari halaman khusus owner", async ({ page }) => {
   await loginAsCashier(page);
 
-  for (const path of ["/dashboard", "/products", "/employees"]) {
+  for (const path of ["/dashboard", "/products", "/employees", "/settings/security"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/pos$/);
     await expect(page.getByRole("heading", { name: "Halo, Rizky 👋" })).toBeVisible();

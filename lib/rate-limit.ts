@@ -52,6 +52,16 @@ export function clientErrorRateLimitRules(ip: string): RateLimitRule[] {
   return [{ key: `client-error:${ip}`, max: CLIENT_ERROR_LIMIT }];
 }
 
+/** Wrong current-password attempts allowed when changing a password. */
+export const PASSWORD_CHANGE_LIMIT = 5;
+
+export function passwordChangeRateLimitRules(
+  userId: string,
+  ip: string,
+): RateLimitRule[] {
+  return [{ key: `password:${userId}:${ip}`, max: PASSWORD_CHANGE_LIMIT }];
+}
+
 export function checkRateLimit(
   rules: RateLimitRule[],
   now = Date.now(),

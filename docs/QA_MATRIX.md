@@ -6,7 +6,7 @@ bagian manual butuh perangkat nyata (printer thermal, HP, Safari iOS).
 - **Terakhir dijalankan:** 2026-10-29
 - **Lingkungan otomatis:** Chromium (Playwright), dev server demo mode `127.0.0.1:3210`
 - **Data:** demo (localStorage), bukan project Supabase production
-- **Pipeline lokal:** `npm run ci` (typecheck, lint, 212 unit test, production build) dan `npm run test:e2e` (20 skenario) hijau pada commit yang sama.
+- **Pipeline lokal:** `npm run ci` (typecheck, lint, 220 unit test, production build) dan `npm run test:e2e` (22 skenario) hijau pada commit yang sama.
 
 ## Menjalankan ulang bagian otomatis
 
@@ -38,6 +38,7 @@ console di semua kombinasi:
 | `/dashboard` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `/products` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `/employees` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/settings/security` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 Screenshot: `qa-artifacts/{mobile-360,mobile-390,tablet-768,tablet-820,tablet-1024,laptop-1180,desktop-1280}/*.png`.
 
@@ -60,6 +61,7 @@ grid menu **3 kolom**, dan bottom bar tersembunyi. Di 1280 px grid menjadi
 | Kasir tidak melihat kartu ekspor Excel di `/history` | ✅ (dijaga E2E `e2e/export.spec.ts`) |
 | Akun `DEVELOPER` tidak muncul di `/employees` (Owner maupun Developer) dan Developer tetap bisa membuka halaman Owner | ✅ (dijaga E2E `e2e/developer.spec.ts`) |
 | Owner tidak bisa melihat/mengubah/menonaktifkan/mempromosikan baris Developer; nama Developer hilang dari `staff_directory` | ✅ (dijaga `npm run test:rls`) |
+| Owner/Developer membuka `/settings/security`; kasir dialihkan ke `/pos`; form terkunci dan menjelaskan mode demo | ✅ (dijaga E2E `e2e/settings-security.spec.ts`, `e2e/negative.spec.ts`) |
 
 ## 3. Kondisi khusus — otomatis ✅
 

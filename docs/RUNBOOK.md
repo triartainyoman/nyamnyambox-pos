@@ -501,6 +501,16 @@ commit tidak sengaja) atau sebagai rutinitas tahunan.
 
 **C. Password Owner**
 
+Cara utama sekarang lewat aplikasi:
+
+1. Login sebagai Owner → **Keamanan Akun** (`/settings/security`).
+2. Isi password saat ini, password baru (minimal 8 karakter), lalu ulangi.
+3. Simpan password baru di password manager dan `~/.nyb-owner-password`
+   (lokal, izin `600`).
+
+Kalau halaman tidak bisa dibuka (mis. lupa password saat ini), pakai jalur
+Supabase:
+
 1. Supabase → **Authentication → Users** → cari email Owner → **Reset
    password**.
 2. Simpan password baru di password manager dan `~/.nyb-owner-password`

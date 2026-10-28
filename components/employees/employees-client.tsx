@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { AtSign, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -58,9 +59,16 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
             Tambah akun kasir (login dengan username) atau nonaktifkan akses yang tidak digunakan.
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-          <UserPlus className="size-4" /> Tambah Kasir
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href="/settings/security">
+              <ShieldCheck className="size-4" /> Keamanan Akun
+            </Link>
+          </Button>
+          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+            <UserPlus className="size-4" /> Tambah Kasir
+          </Button>
+        </div>
       </header>
 
       <div className="grid grid-cols-3 gap-2.5">

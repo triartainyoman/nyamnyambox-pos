@@ -140,6 +140,7 @@ async function responsive(browser) {
       ["/dashboard", "Dashboard"],
       ["/products", "Menu & Promo"],
       ["/employees", "Kelola Karyawan"],
+      ["/settings/security", "Keamanan Akun"],
     ]) {
       await page.goto(`${BASE}${url}`);
       await page.getByRole("heading", { name: heading, exact: false }).first().waitFor();

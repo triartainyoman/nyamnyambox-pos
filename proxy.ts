@@ -14,7 +14,14 @@ import { buildCsp, createNonce } from "@/lib/security";
 import type { Database } from "@/lib/supabase/types";
 import type { UserRole } from "@/lib/types";
 
-const PROTECTED_PREFIXES = ["/pos", "/history", "/dashboard", "/products", "/employees"];
+const PROTECTED_PREFIXES = [
+  "/pos",
+  "/history",
+  "/dashboard",
+  "/products",
+  "/employees",
+  "/settings",
+];
 
 function isProtected(pathname: string) {
   return PROTECTED_PREFIXES.some(
