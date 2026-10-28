@@ -3,10 +3,10 @@
 Checklist untuk T12 di `PRODUCTION_TODO.md`. Bagian otomatis sudah dijalankan;
 bagian manual butuh perangkat nyata (printer thermal, HP, Safari iOS).
 
-- **Terakhir dijalankan:** 2026-10-27
+- **Terakhir dijalankan:** 2026-10-28
 - **Lingkungan otomatis:** Chromium (Playwright), dev server demo mode `127.0.0.1:3210`
 - **Data:** demo (localStorage), bukan project Supabase production
-- **Pipeline lokal:** `npm run ci` (typecheck, lint, 181 unit test, production build) dan `npm run test:e2e` (13 skenario) hijau pada commit yang sama.
+- **Pipeline lokal:** `npm run ci` (typecheck, lint, 197 unit test, production build) dan `npm run test:e2e` (16 skenario) hijau pada commit yang sama.
 
 ## Menjalankan ulang bagian otomatis
 
@@ -30,16 +30,20 @@ transisi `visibility` selesai, supaya hasilnya tidak menyesatkan.
 Tidak ada horizontal scroll (`scrollWidth > clientWidth`) dan tidak ada error
 console di semua kombinasi:
 
-| Halaman | 360px | 390px | 768px | 1280px |
-| --- | --- | --- | --- | --- |
-| `/login` | ✅ | ✅ | ✅ | ✅ |
-| `/pos` | ✅ | ✅ | ✅ | ✅ |
-| `/history` | ✅ | ✅ | ✅ | ✅ |
-| `/dashboard` | ✅ | ✅ | ✅ | ✅ |
-| `/products` | ✅ | ✅ | ✅ | ✅ |
-| `/employees` | ✅ | ✅ | ✅ | ✅ |
+| Halaman | 360px | 390px | 768px | 820px | 1024px | 1180px | 1280px |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `/login` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/pos` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/history` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/dashboard` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/products` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/employees` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-Screenshot: `qa-artifacts/{mobile-360,mobile-390,tablet-768,desktop-1280}/*.png`.
+Screenshot: `qa-artifacts/{mobile-360,mobile-390,tablet-768,tablet-820,tablet-1024,laptop-1180,desktop-1280}/*.png`.
+
+Tablet (≥768 px) punya pemeriksaan tambahan: panel keranjang **persisten**,
+grid menu **3 kolom**, dan bottom bar tersembunyi. Di 1280 px grid menjadi
+4 kolom. Perilaku ini dijaga `e2e/tablet.spec.ts` (tablet 820 px + phone 390 px).
 
 ## 2. Alur transaksi — otomatis ✅
 
@@ -80,6 +84,8 @@ Centang setelah dicoba. Kalau ada yang gagal, catat langkah + screenshot.
 | M9 | Tambah/edit menu dan tambah kasir, lalu login dengan akun baru | desktop | ⬜ |
 | M10 | Logout lalu buka `/pos` langsung → dialihkan ke login | HP/desktop | ⬜ |
 | M11 | Upload foto menu dari galeri HP (JPG/PNG), ganti foto, lalu pastikan foto baru tampil di POS dan objek lama hilang dari bucket `product-images` | HP + desktop | ⬜ |
+| M12 | iPad portrait (768–834 px): keranjang selalu terlihat, grid 3 kolom, tidak ada tombol terpotong, target sentuh nyaman | iPad | ⬜ |
+| M13 | iPad landscape (1024–1180 px): sidebar penuh, keranjang di kanan, checkout + nota tampil utuh | iPad | ⬜ |
 
 ## 5. Bug yang ditemukan & diperbaiki
 
@@ -88,6 +94,7 @@ Centang setelah dicoba. Kalau ada yang gagal, catat langkah + screenshot.
 | Q1 | P1 | Dua klik "Konfirmasi & Proses Pesanan" dalam tick yang sama membuat **dua pesanan** (tombol baru disabled setelah React re-render). | Guard `useRef` di `components/pos/cart-sheet.tsx`; regresi E2E `e2e/checkout-guard.spec.ts`. Guard yang sama ditambahkan ke simpan-edit di `components/history/order-detail-sheet.tsx`. |
 | Q2 | P2 | Saat mencetak dari sheet detail riwayat, tombol "Cetak/Edit/Kirim WA" dan kartu di belakangnya ikut tercetak. Penyebab: `transition-all` menahan properti diskret `visibility` selama transisi, jadi elemen masih `visible` ketika snapshot print diambil. | `@media print` mematikan `transition`/`animation` untuk semua elemen, ditambah `no-print` eksplisit di `SheetHeader`/`SheetBody`/`SheetFooter`. Regresi dicek di `e2e/cashier.spec.ts` (media print: 0 elemen terlihat di luar struk). |
 | Q3 | P3 | Footer struk thermal mencetak `nyamnyambox.com` (nama website, bukan identitas toko). | Dihapus dari `components/receipt/receipt.tsx` (permintaan Owner, 2026-10-27). |
+| Q4 | P1 | Di lebar 768–1023 px (iPad portrait) keranjang **tidak bisa dibuka sama sekali**: floating bar `md:hidden`, panel keranjang `hidden lg:block`. | Panel keranjang dipindah ke `md:block` dan sidebar menjadi icon rail 80 px; regresi dijaga `e2e/tablet.spec.ts` (820 px). |
 
 ## 6. Catatan terbuka (bukan blocker T12)
 
@@ -98,3 +105,7 @@ Centang setelah dicoba. Kalau ada yang gagal, catat langkah + screenshot.
   `getClaims()` untuk verifikasi JWT lokal, dan loading skeleton per halaman.
 - Tombol WhatsApp memakai `wa.me/?text=…` tanpa nomor kalau pelanggan tidak
   mengisi nomor HP; ini disengaja.
+- Di 768–1023 px sidebar hanya menampilkan ikon; label muncul lagi di ≥1024 px
+  (`title` + `aria-label` tetap ada untuk hover/screen reader). Ini keputusan
+  desain Phase 2 — kalau kasir baru kesulitan, tambahkan label kecil di bawah
+  ikon tanpa mengubah breakpoint lain.

@@ -12,12 +12,17 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 ## Features
 
 ### Point of Sale (`/pos`)
-- Flat, 2-column mobile menu with product images and prices.
+- Flat menu grid with product images and prices: 2 columns on phones, 3 on tablets, 4 on wide screens.
 - Tap to add, adjust quantity, add per-item notes (spice level, requests).
-- Floating cart bar with item count and running total.
+- Floating cart bar with item count and running total on phones; from tablet up the cart is a persistent right panel.
 - Checkout bottom sheet: channel, payment method, payment status, customer WhatsApp number.
 - Promo items are ordinary menu entries prefixed with `[PROMO]`.
 - Instant receipt modal after checkout with print and WhatsApp actions.
+
+### Responsive layout
+- **Phone (<768 px):** bottom tab bar, floating cart bar, bottom-sheet checkout.
+- **Tablet (≥768 px):** sidebar collapses to an 80 px icon rail; the cart panel is always visible on `/pos` (no more unreachable cart between 768–1023 px); 3-column menu grid.
+- **Desktop (≥1024 px):** full 256 px sidebar. At ≥1280 px the menu grid expands to 4 columns.
 
 ### Receipts & WhatsApp
 - Browser-print receipt optimized for **58mm and 80mm** thermal paper / PDF export.

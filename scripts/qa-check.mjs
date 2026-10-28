@@ -32,6 +32,9 @@ const VIEWPORTS = [
   { name: "mobile-360", width: 360, height: 800 },
   { name: "mobile-390", width: 390, height: 844 },
   { name: "tablet-768", width: 768, height: 1024 },
+  { name: "tablet-820", width: 820, height: 1180 },
+  { name: "tablet-1024", width: 1024, height: 768 },
+  { name: "laptop-1180", width: 1180, height: 820 },
   { name: "desktop-1280", width: 1280, height: 800 },
 ];
 
@@ -103,6 +106,30 @@ async function responsive(browser) {
       await page.goto(`${BASE}${url}`);
       await page.getByRole("heading", { name: heading, exact: false }).first().waitFor();
       await checkOverflow(page, `${url} @ ${viewport.width}px`);
+
+      if (url === "/pos") {
+        const panel = page.getByRole("complementary", { name: "Ringkasan pesanan" });
+        if (viewport.width >= 768) {
+          if (await panel.isVisible()) {
+            ok(`${viewport.width}px: cart panel is persistent`);
+          } else {
+            bad(`${viewport.width}px: persistent cart panel is missing`);
+          }
+          const columns = await page.evaluate(() => {
+            const grid = document.querySelector("section div.grid");
+            return grid
+              ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length
+              : 0;
+          });
+          if (columns >= 3) ok(`${viewport.width}px: product grid has ${columns} columns`);
+          else bad(`${viewport.width}px: product grid has only ${columns} columns`);
+        } else if (await panel.isVisible()) {
+          bad(`${viewport.width}px: cart panel should stay a bottom sheet`);
+        } else {
+          ok(`${viewport.width}px: cart stays a bottom sheet`);
+        }
+      }
+
       await shot(page, viewport.name, url.replace("/", "") || "root");
     }
 

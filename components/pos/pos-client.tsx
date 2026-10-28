@@ -45,7 +45,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
         </Badge>
       </header>
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_16rem] md:items-start md:gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <section>
           <div className="mb-2.5 flex items-end justify-between">
             <h2 className="text-sm font-bold">Menu Hari Ini</h2>
@@ -60,7 +60,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
               onRetry={() => refetch()}
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {isLoading
                 ? Array.from({ length: 8 }).map((_, index) => (
                     <div key={index} className="rounded-2xl border border-border/70 bg-card p-2">
@@ -85,7 +85,7 @@ export function PosClient({ cashierName }: { cashierName: string }) {
           )}
         </section>
 
-        <aside className="sticky top-6 hidden lg:block">
+        <aside aria-label="Ringkasan pesanan" className="sticky top-6 hidden md:block">
           <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold">
