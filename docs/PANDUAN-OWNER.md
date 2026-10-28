@@ -110,6 +110,17 @@ strip; diawali dan diakhiri huruf/angka. Contoh: `rizky`, `sari.pagi`,
 Email tetap wajib karena dipakai Supabase untuk identitas akun dan pemulihan.
 Kasir tidak perlu tahu/memakai emailnya untuk login.
 
+### Mengubah nama atau username kasir
+
+1. Buka **Kelola Karyawan**.
+2. Pada kartu kasir, ketuk ikon **pensil** (Edit akun).
+3. Ubah **Nama Lengkap** dan/atau **Username**, lalu ketuk **Simpan Perubahan**.
+4. Kasir langsung memakai username baru pada login berikutnya.
+
+Email tidak bisa diubah dari aplikasi. Kalau email salah, perbaiki lewat
+dashboard Supabase (menu **Authentication → Users**). Username harus unik;
+kalau sudah dipakai, aplikasi menolak dengan pesan yang jelas.
+
 ### Menonaktifkan kasir
 
 Matikan switch **Aktif** pada kartu kasir. Akun langsung tidak bisa login dan
@@ -125,14 +136,22 @@ tidak bisa membuat transaksi; riwayatnya tetap ada.
 
 ### Mereset password kasir
 
-Belum ada tombol reset di aplikasi. Langkahnya:
+1. Buka **Kelola Karyawan**.
+2. Pada kartu kasir, ketuk ikon **kunci** (Reset password).
+3. Isi password baru (minimal 8 karakter) dua kali, lalu ketuk **Reset Password**.
+4. Berikan password itu ke kasir lewat pesan pribadi. Hanya Owner yang dapat
+   menggantinya lagi.
+
+Reset dari aplikasi hanya tersedia di mode production. Kalau tombol tidak bisa
+dipakai (mis. `SUPABASE_SERVICE_ROLE_KEY` belum diatur), pakai jalur Supabase:
 
 1. Buka Supabase → project `pnclljapcuobhskqrcux` → **Authentication → Users**.
 2. Cari email kasir → menu `⋯` → **Reset password** (atau kirim *magic link*).
-3. Berikan password baru ke kasir, minta segera menggantinya di tempat aman.
+3. Berikan password baru ke kasir lewat pesan pribadi.
 
 Kalau email kasir fiktif/tidak bisa diakses, buat akun kasir baru dan
-nonaktifkan akun lama.
+nonaktifkan akun lama. Tidak ada tombol hapus permanen — lihat bagian
+**Menonaktifkan kasir**.
 
 ---
 
@@ -210,8 +229,8 @@ ke repo.
    berikutnya.
 
 Halaman ini hanya untuk Owner dan Developer. Kasir tidak bisa mengganti
-password sendiri; minta Owner mereset lewat dashboard Supabase (atau lewat
-menu Kelola Karyawan setelah fitur reset tersedia).
+password sendiri; minta Owner mereset lewat **Kelola Karyawan** (ikon kunci)
+atau dashboard Supabase.
 
 - Pakai password manager; jangan pakai password yang sama dengan akun lain.
 - Jangan pernah mengirim password lewat chat grup; gunakan pesan pribadi.
@@ -232,7 +251,7 @@ menu Kelola Karyawan setelah fitur reset tersedia).
 | Batasan | Dampak | Mitigasi |
 | --- | --- | --- |
 | Supabase free plan tanpa backup otomatis/PITR | Paling banyak kehilangan 7 hari data | Dump mingguan ke GitHub artifact; upgrade bila transaksi makin besar |
-| Tidak ada reset password mandiri | Kasir harus lewat Owner | Owner reset via dashboard Supabase |
+| Tidak ada reset password mandiri | Kasir harus lewat Owner | Owner reset lewat Kelola Karyawan (ikon kunci) atau dashboard Supabase |
 | Cetak lewat dialog browser | Perlu printer terpasang di perangkat | Simpan pengaturan cetak yang sudah terbukti |
 | WhatsApp berupa tautan `wa.me` | Pesan dikirim manual dari WhatsApp | Kasir menekan **Kirim WA** lalu kirim |
 | Tanpa domain kustom | Alamat masih `*.vercel.app` | Tambahkan domain di Vercel kapan saja, tanpa ubah kode |

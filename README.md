@@ -53,7 +53,10 @@ Mobile-first point-of-sale and order management app for **Nyamnyambox** (ricebow
 ### Employees (`/employees`, Owner only)
 - Create cashier accounts with name, username, email, and password.
 - Cashiers sign in with **username + password**; email stays required for the Supabase Auth account and password recovery.
+- Edit a cashier's **name** and **username** from the row actions. Email is intentionally read-only; change it in the Supabase dashboard if it is ever wrong.
+- Reset a cashier's password from the app (production only) with a temporary password of at least 8 characters. The cashier signs in with it immediately.
 - Deactivate/reactivate accounts. Deactivated staff cannot sign in or query data.
+- **No hard delete:** deactivating is the delete equivalent, so historical orders and receipts keep the cashier name.
 - Roles are assigned server-side, never trusted from the client.
 
 ### Account Security (`/settings/security`, Owner/Developer only)
@@ -382,7 +385,7 @@ Requires **Node.js 22.12+** (Vitest 5 and Next.js 16).
 - cart quantities, notes, totals, and persistence;
 - WhatsApp receipt text and `wa.me` phone normalization;
 - error mapping/whitelisting (raw Postgres details never leak);
-- password-change rules (minimum length, different from current, confirmation);
+- password rules (change and reset: minimum length, confirmation, different from current);
 - role landing paths and channel/payment labels.
 
 The suite runs in CI on every push to `main` and every pull request via
@@ -396,7 +399,7 @@ Covered flows:
 
 - cashier: login → add menu + notes → checkout (Takeaway/QRIS/phone) → receipt → edit the order in history → `Diedit` badge;
 - double submit: two clicks on "Konfirmasi & Proses Pesanan" in the same tick still create exactly one order (`e2e/checkout-guard.spec.ts`);
-- owner: email login → dashboard → add a menu → add a cashier → open **Keamanan Akun**;
+- owner: email login → dashboard → add a menu → add a cashier → edit the cashier's name/username → open **Keamanan Akun**;
 - negative: owner username login rejected; cashier redirected from owner pages (including `/settings/security`); protected routes redirect to `/login` without a session.
 
 First-time setup: `npx playwright install chromium`. The E2E server uses `.next-e2e/` so it can run beside your normal dev server. CI runs it via `.github/workflows/ci.yml` and uploads traces/screenshots on failure.

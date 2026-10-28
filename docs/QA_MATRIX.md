@@ -6,7 +6,7 @@ bagian manual butuh perangkat nyata (printer thermal, HP, Safari iOS).
 - **Terakhir dijalankan:** 2026-10-29
 - **Lingkungan otomatis:** Chromium (Playwright), dev server demo mode `127.0.0.1:3210`
 - **Data:** demo (localStorage), bukan project Supabase production
-- **Pipeline lokal:** `npm run ci` (typecheck, lint, 220 unit test, production build) dan `npm run test:e2e` (22 skenario) hijau pada commit yang sama.
+- **Pipeline lokal:** `npm run ci` (typecheck, lint, 223 unit test, production build) dan `npm run test:e2e` (23 skenario) hijau pada commit yang sama.
 
 ## Menjalankan ulang bagian otomatis
 
@@ -62,6 +62,7 @@ grid menu **3 kolom**, dan bottom bar tersembunyi. Di 1280 px grid menjadi
 | Akun `DEVELOPER` tidak muncul di `/employees` (Owner maupun Developer) dan Developer tetap bisa membuka halaman Owner | ✅ (dijaga E2E `e2e/developer.spec.ts`) |
 | Owner tidak bisa melihat/mengubah/menonaktifkan/mempromosikan baris Developer; nama Developer hilang dari `staff_directory` | ✅ (dijaga `npm run test:rls`) |
 | Owner/Developer membuka `/settings/security`; kasir dialihkan ke `/pos`; form terkunci dan menjelaskan mode demo | ✅ (dijaga E2E `e2e/settings-security.spec.ts`, `e2e/negative.spec.ts`) |
+| Owner mengubah nama/username kasir, username duplikat ditolak, dan reset password terkunci di mode demo | ✅ (dijaga E2E `e2e/employees-account.spec.ts`) |
 
 ## 3. Kondisi khusus — otomatis ✅
 

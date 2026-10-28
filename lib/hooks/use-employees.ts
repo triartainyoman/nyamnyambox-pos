@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createEmployeeAction } from "@/app/actions/employees";
+import { createEmployeeAction, resetEmployeePasswordAction, updateEmployeeAction } from "@/app/actions/employees";
 import { listProfiles, updateProfile } from "@/lib/data/profiles";
 import { isDemoMode } from "@/lib/env";
 import { UserFacingError } from "@/lib/errors";
@@ -61,6 +61,55 @@ export function useCreateEmployee() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+}
+
+/** Edit a cashier's name and username (Owner only). */
+export function useUpdateEmployee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; name: string; username: string }) => {
+      if (isDemoMode) {
+        const { demoUpdateEmployee } = await import("@/lib/demo/api");
+        return demoUpdateEmployee(input);
+      }
+
+      const formData = new FormData();
+      formData.set("id", input.id);
+      formData.set("name", input.name);
+      formData.set("username", input.username);
+
+      const result = await updateEmployeeAction(formData);
+      if (result?.error) throw new UserFacingError(result.error);
+      return null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+}
+
+/** Reset a cashier's password with a temporary password (Owner only). */
+export function useResetEmployeePassword() {
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      password: string;
+      confirmPassword: string;
+    }) => {
+      if (isDemoMode) {
+        throw new UserFacingError("Reset password hanya tersedia di mode production.");
+      }
+
+      const formData = new FormData();
+      formData.set("id", input.id);
+      formData.set("password", input.password);
+      formData.set("confirm_password", input.confirmPassword);
+
+      const result = await resetEmployeePasswordAction(formData);
+      if (result?.error) throw new UserFacingError(result.error);
+      return null;
     },
   });
 }

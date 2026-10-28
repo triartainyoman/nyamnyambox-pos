@@ -286,6 +286,32 @@ export function demoCreateEmployee(input: {
   return profile;
 }
 
+/** Demo counterpart of `updateEmployeeAction`: name + username only. */
+export function demoUpdateEmployee(input: {
+  id: string;
+  name: string;
+  username: string;
+}): Profile {
+  const db = getDemoDb();
+  const index = db.profiles.findIndex((profile) => profile.id === input.id);
+  if (index < 0) throw new UserFacingError("Akun tidak ditemukan");
+
+  const target = db.profiles[index];
+  if (target.role !== "EMPLOYEE") {
+    throw new UserFacingError("Hanya akun kasir yang dapat diubah dari halaman ini");
+  }
+
+  const username = normalizeUsername(input.username);
+  if (db.profiles.some((profile) => profile.id !== input.id && profile.username === username)) {
+    throw new UserFacingError("Username sudah dipakai. Pilih username lain.");
+  }
+
+  const updated = { ...target, name: input.name, username };
+  db.profiles[index] = updated;
+  saveDemoDb(db);
+  return updated;
+}
+
 export function demoUpdateProfile(
   id: string,
   patch: Partial<Pick<Profile, "name" | "role" | "is_active">>,

@@ -411,6 +411,9 @@ Rutinitas tutup buku bulanan:
 3. Login username butuh `SUPABASE_SERVICE_ROLE_KEY`; kalau env itu hilang,
    kasir tidak bisa masuk (Owner via email masih bisa).
 4. Cek Supabase → *Authentication* → *Users*: akun masih aktif?
+5. Kalau hanya satu kasir yang lupa password, reset dari **Kelola Karyawan →
+   ikon kunci** (lihat `docs/PANDUAN-OWNER.md` §4). Kalau tombol gagal karena
+   service role key, pakai **Authentication → Users → Reset password**.
 
 ### 5.3 Nota / nomor transaksi aneh
 

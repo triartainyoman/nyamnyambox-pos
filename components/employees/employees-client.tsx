@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AtSign, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { AtSign, KeyRound, Mail, Pencil, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { EditEmployeeDialog } from "@/components/employees/edit-employee-dialog";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
+import { ResetEmployeePasswordDialog } from "@/components/employees/reset-employee-password-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/ui/query-error";
@@ -28,6 +30,8 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
   const { data: employees, isLoading, isError, error, refetch } = useEmployees();
   const updateProfile = useUpdateProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Profile | null>(null);
+  const [resetting, setResetting] = useState<Profile | null>(null);
 
   const activeCount = (employees ?? []).filter((employee) => employee.is_active).length;
 
@@ -56,7 +60,8 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
             Kelola Karyawan
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Tambah akun kasir (login dengan username) atau nonaktifkan akses yang tidak digunakan.
+            Tambah akun kasir, ubah nama/username, reset password, atau nonaktifkan akses yang
+            tidak digunakan.
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -163,16 +168,38 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
                     </p>
                   </div>
 
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <Switch
-                      checked={employee.is_active}
-                      disabled={locked || updateProfile.isPending}
-                      onCheckedChange={(value) => toggle(employee, value)}
-                      aria-label={`Status ${employee.name}`}
-                    />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {employee.is_active ? "Aktif" : "Nonaktif"}
-                    </span>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {employee.role === "EMPLOYEE" ? (
+                      <div className="flex items-center gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Edit akun ${employee.name}`}
+                          onClick={() => setEditing(employee)}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Reset password ${employee.name}`}
+                          onClick={() => setResetting(employee)}
+                        >
+                          <KeyRound className="size-3.5" />
+                        </Button>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        checked={employee.is_active}
+                        disabled={locked || updateProfile.isPending}
+                        onCheckedChange={(value) => toggle(employee, value)}
+                        aria-label={`Status ${employee.name}`}
+                      />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {employee.is_active ? "Aktif" : "Nonaktif"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -190,6 +217,26 @@ export function EmployeesClient({ currentProfileId }: { currentProfileId: string
       </section>
 
       {dialogOpen && <EmployeeDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
+      {editing && (
+        <EditEmployeeDialog
+          key={editing.id}
+          employee={editing}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        />
+      )}
+      {resetting && (
+        <ResetEmployeePasswordDialog
+          key={resetting.id}
+          employee={resetting}
+          open
+          onOpenChange={(open) => {
+            if (!open) setResetting(null);
+          }}
+        />
+      )}
     </div>
   );
 }
