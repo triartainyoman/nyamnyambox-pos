@@ -143,7 +143,7 @@ shift.
 | --- | --- |
 | “Username atau password salah.” | Periksa huruf besar/kecil dan spasi. Pastikan memakai **username**, bukan email. |
 | “Terlalu banyak percobaan masuk. Coba lagi dalam … menit.” | Tunggu sesuai waktu yang tertera (±15 menit), atau minta Owner mereset password. |
-| Lupa password | Hubungi Owner. Hanya Owner yang bisa mereset lewat dashboard Supabase. |
+| Lupa password | Hubungi Owner. Owner bisa mereset lewat **Kelola Karyawan** (ikon kunci) atau dashboard Supabase. |
 | Menu tidak muncul | Tarik halaman ke bawah untuk muat ulang. Kalau tetap kosong, Owner mungkin menonaktifkan menu tersebut. |
 | Nota tidak muncul setelah konfirmasi | Buka **Riwayat** dan cari nomor terakhir. Jangan mengulang order sebelum dicek — bisa dobel. |
 | Halaman putih / error | Muat ulang. Kalau tetap, logout lalu login lagi, dan catat waktu kejadian untuk Owner. |

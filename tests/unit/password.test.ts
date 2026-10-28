@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { PASSWORD_MIN_LENGTH, validatePasswordChange } from "@/lib/password";
+import { PASSWORD_MIN_LENGTH, validatePasswordChange, validatePasswordReset } from "@/lib/password";
 
 function input(overrides: Partial<Parameters<typeof validatePasswordChange>[0]> = {}) {
   return {
@@ -51,5 +51,25 @@ describe("validatePasswordChange", () => {
     expect(validatePasswordChange(input({ confirmPassword: "beda12345" }))).toBe(
       "Konfirmasi password tidak sama.",
     );
+  });
+});
+
+describe("validatePasswordReset", () => {
+  it("accepts a matching password", () => {
+    expect(
+      validatePasswordReset({ password: "baru12345", confirmPassword: "baru12345" }),
+    ).toBeNull();
+  });
+
+  it("rejects a short password", () => {
+    expect(
+      validatePasswordReset({ password: "pendek", confirmPassword: "pendek" }),
+    ).toBe(`Password baru minimal ${PASSWORD_MIN_LENGTH} karakter.`);
+  });
+
+  it("requires matching confirmation", () => {
+    expect(
+      validatePasswordReset({ password: "baru12345", confirmPassword: "beda12345" }),
+    ).toBe("Konfirmasi password tidak sama.");
   });
 });
